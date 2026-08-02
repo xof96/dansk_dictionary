@@ -1,98 +1,151 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { useState } from 'react';
+import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { StoredEntryRow } from '@/components/stored-entry-row';
+import { AppText, Card, EmptyState, PageScroll } from '@/components/ui';
+import { normalizeSearchTerm } from '@/domain/services/dictionary-policy';
+import { useHistory } from '@/features/history/use-history';
+import { useAppTheme } from '@/hooks/use-app-theme';
 
-export default function HomeScreen() {
+function openEntry(term: string) {
+  router.push({ pathname: '/entry/[term]', params: { term } });
+}
+
+export default function SearchScreen() {
+  const colors = useAppTheme();
+  const [term, setTerm] = useState('');
+  const history = useHistory(6);
+
+  const submit = () => {
+    const normalized = normalizeSearchTerm(term);
+    if (!normalized) return;
+    Keyboard.dismiss();
+    openEntry(normalized);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <PageScroll>
+      <View style={styles.hero}>
+        <AppText variant="caption" style={{ color: colors.primary, fontWeight: '800' }}>
+          DANSK → ESPAÑOL · ENGLISH
+        </AppText>
+        <AppText variant="title">¿Qué palabra buscas?</AppText>
+        <AppText variant="body" style={{ color: colors.muted }}>
+          Busca una palabra danesa exacta, también si está flexionada.
+        </AppText>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <View
+        style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      >
+        <Ionicons name="search" size={22} color={colors.muted} />
+        <TextInput
+          accessibilityLabel="Palabra danesa"
+          accessibilityHint="Admite las letras æ, ø y å"
+          autoCapitalize="none"
+          autoCorrect={false}
+          enterKeyHint="search"
+          onChangeText={setTerm}
+          onSubmitEditing={submit}
+          placeholder="hus, hedde, hedder…"
+          placeholderTextColor={colors.muted}
+          returnKeyType="search"
+          style={[styles.input, { color: colors.text }]}
+          value={term}
+        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Buscar"
+          disabled={!term.trim()}
+          onPress={submit}
+          style={({ pressed }) => [
+            styles.searchButton,
+            { backgroundColor: colors.primary },
+            pressed && styles.pressed,
+            !term.trim() && styles.disabled,
+          ]}
+        >
+          <Ionicons name="arrow-forward" size={23} color={colors.background} />
+        </Pressable>
+      </View>
+
+      <Card>
+        <AppText variant="heading">Prueba el corte vertical</AppText>
+        <View style={styles.quickTerms}>
+          {['hus', 'hedde', 'hedder'].map((quickTerm) => (
+            <Pressable
+              key={quickTerm}
+              accessibilityRole="button"
+              onPress={() => openEntry(quickTerm)}
+              style={[styles.quickTerm, { backgroundColor: colors.primarySoft }]}
+            >
+              <AppText style={{ color: colors.primary, fontWeight: '800' }}>{quickTerm}</AppText>
+            </Pressable>
+          ))}
+        </View>
+      </Card>
+
+      <View style={styles.sectionTitle}>
+        <AppText variant="heading">Recientes</AppText>
+        <Pressable accessibilityRole="link" onPress={() => router.push('/history')}>
+          <AppText style={{ color: colors.primary, fontWeight: '700' }}>Ver todo</AppText>
+        </Pressable>
+      </View>
+      {history.loading ? (
+        <AppText variant="caption">Cargando historial…</AppText>
+      ) : history.items.length === 0 ? (
+        <EmptyState
+          title="Aún no hay búsquedas"
+          message="Las consultas exactas aparecerán aquí y seguirán disponibles sin conexión."
+        />
+      ) : (
+        <Card>
+          {history.items.map((item) => (
+            <StoredEntryRow
+              key={item.query}
+              term={item.displayTerm}
+              entryKind={item.entryKind}
+              subtitle={new Date(item.searchedAt).toLocaleString('es-ES')}
+              onOpen={() => openEntry(item.query)}
+            />
+          ))}
+        </Card>
+      )}
+    </PageScroll>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  hero: { gap: 8, paddingTop: 10 },
+  searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 17,
+    padding: 7,
+    paddingLeft: 14,
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  input: { flex: 1, minHeight: 48, fontSize: 18 },
+  searchButton: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  pressed: { opacity: 0.7 },
+  disabled: { opacity: 0.4 },
+  quickTerms: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
+  quickTerm: {
+    minHeight: 48,
+    minWidth: 76,
+    paddingHorizontal: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 13,
   },
+  sectionTitle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
 });

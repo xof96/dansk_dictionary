@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "dansk_dictionary",
-    "slug": "dansk_dictionary",
+    "name": "Dansk Dictionary",
+    "slug": "dansk-dictionary",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -12,6 +12,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.danskdictionary.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,11 +39,11 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
     }
   }
 }

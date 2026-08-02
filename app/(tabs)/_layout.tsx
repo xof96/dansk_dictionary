@@ -1,33 +1,53 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import React from 'react';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAppTheme } from '@/hooks/use-app-theme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
+  const colors = useAppTheme();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarLabelStyle: { fontSize: 12 },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Buscar',
+          tabBarAccessibilityLabel: 'Buscar en el diccionario',
+          tabBarIcon: ({ color, size }) => <Ionicons name="search" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="favorites"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Favoritos',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="heart-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'Historial',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="time-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="information"
+        options={{
+          title: 'Información',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="information-circle-outline" color={color} size={size} />
+          ),
         }}
       />
     </Tabs>
