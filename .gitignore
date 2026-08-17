@@ -38,6 +38,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Codex local attachments
+.codex-remote-attachments/
+
 app-example
 
 # generated native folders
