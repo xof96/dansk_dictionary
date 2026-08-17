@@ -1,5 +1,11 @@
 export type DictionaryErrorCode =
-  'NETWORK' | 'TIMEOUT' | 'RATE_LIMIT' | 'INVALID_RESPONSE' | 'NOT_FOUND' | 'STORAGE';
+  | 'NETWORK'
+  | 'TIMEOUT'
+  | 'RATE_LIMIT'
+  | 'PROVIDER_REJECTED'
+  | 'INVALID_RESPONSE'
+  | 'NOT_FOUND'
+  | 'STORAGE';
 
 export class DictionaryError extends Error {
   constructor(
