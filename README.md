@@ -52,23 +52,33 @@ La primera consulta de una palabra necesita conexión a internet porque usa una 
 
 ## Validación del proyecto
 
+La integración continua y la validación local parten del lockfile y ejecutan el mismo recorrido:
+
 ```powershell
+npm ci
 npm run typecheck
 npm run lint
 npm test
 npm run format:check
 npx expo-doctor
 npx expo export --platform android --output-dir dist
+```
+
+El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) se ejecuta en cada push y pull request contra `main`, además de permitir una ejecución manual. Usa Node 20.19.4, permisos de solo lectura y la caché de npm derivada de `package-lock.json`; no recibe secretos. Metro y el bundle Android se verificaron en este entorno; el escaneo en un teléfono físico no puede verificarse desde aquí.
+
+La auditoría de dependencias se ejecuta por separado porque las alertas transitivas actuales requieren evaluación bajo la restricción de SDK 54:
+
+```powershell
 npm audit --omit=dev
 ```
 
-Metro y el bundle Android se verificaron en este entorno; el escaneo en un teléfono físico no puede verificarse desde aquí.
+No ejecutes `npm audit fix --force`: puede proponer una matriz de React Native incompatible. El seguimiento de estas alertas está separado del control de calidad del workflow.
 
 ## Dependencias principales
 
 | Dependencia                            | Uso                                     | Compatibilidad                                       |
 | -------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
-| `expo ~54.0.35`                        | runtime y herramientas                  | SDK fijado por requisito                             |
+| `expo ~54.0.37`                        | runtime y herramientas                  | SDK fijado por requisito                             |
 | `react-native 0.81.5` / `react 19.1.0` | interfaz nativa                         | matriz oficial de SDK 54                             |
 | `expo-router ~6.0.24`                  | navegación por archivos                 | versión recomendada para SDK 54                      |
 | `@tanstack/react-query ^5.101.4`       | estado remoto, cancelación y reintentos | librería JS compatible con RN 0.81                   |
@@ -76,13 +86,13 @@ Metro y el bundle Android se verificaron en este entorno; el escaneo en un telé
 | `expo-sqlite ~16.0.10`                 | caché, historial y favoritos            | versión recomendada para SDK 54, incluida en Expo Go |
 | `expo-speech ~14.0.8`                  | TTS danés identificado                  | versión instalada por `expo install` para SDK 54     |
 | `expo-network ~8.0.8`                  | estado online/offline                   | versión instalada por `expo install` para SDK 54     |
-| `jest-expo ~54.0.17`                   | runtime de tests                        | preset específico del SDK                            |
+| `jest-expo ~54.0.18`                   | runtime de tests                        | preset específico del SDK                            |
 | `@testing-library/react-native 13.3.3` | pruebas de comportamiento RN            | fijada en v13 estable; v14 beta requiere React 19.2  |
 | `react-test-renderer 19.1.0`           | par de RNTL 13                          | fijada a la misma versión de React del SDK           |
 
 No se ha añadido backend: el proveedor actual no requiere claves y el procesamiento cabe de forma segura en el cliente. Tampoco se ha elegido licencia para el código del proyecto.
 
-El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. Son dependencias transitivas de las herramientas Expo 54; se validaron con Expo Doctor y un bundle Android. `npm audit --omit=dev` devuelve 0 vulnerabilidades sin ejecutar la actualización incompatible a SDK 57.
+El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. Son dependencias transitivas de las herramientas Expo 54; se validaron con Expo Doctor y un bundle Android. Las alertas restantes de `npm audit --omit=dev` se investigan por separado para no introducir una actualización incompatible con SDK 54.
 
 ## Documentación
 
