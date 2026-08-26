@@ -56,15 +56,10 @@ La integración continua y la validación local parten del lockfile y ejecutan e
 
 ```powershell
 npm ci
-npm run typecheck
-npm run lint
-npm test
-npm run format:check
-npx expo-doctor
-npx expo export --platform android --output-dir dist
+npm run ci:check
 ```
 
-El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) se ejecuta en cada push y pull request contra `main`, además de permitir una ejecución manual. Usa Node 20.19.4, permisos de solo lectura y la caché de npm derivada de `package-lock.json`; no recibe secretos. Metro y el bundle Android se verificaron en este entorno; el escaneo en un teléfono físico no puede verificarse desde aquí.
+`ci:check` ejecuta typecheck, lint, tests offline, formato, Expo Doctor y la exportación Android. El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) invoca ese mismo script en cada push y pull request contra `main`, además de permitir una ejecución manual. Usa Node 20.19.4, permisos de solo lectura y la caché de npm derivada de `package-lock.json`; no recibe secretos. Metro y el bundle Android se verificaron en este entorno; el escaneo en un teléfono físico no puede verificarse desde aquí.
 
 La auditoría de dependencias se ejecuta por separado porque las alertas transitivas actuales requieren evaluación bajo la restricción de SDK 54:
 

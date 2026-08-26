@@ -38,20 +38,5 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Type-check
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test offline fixtures
-        run: npm test
-
-      - name: Check formatting
-        run: npm run format:check
-
-      - name: Validate Expo SDK compatibility
-        run: npx expo-doctor
-
-      - name: Export Android bundle
-        run: npx expo export --platform android --output-dir dist
+      - name: Run project CI checks
+        run: npm run ci:check

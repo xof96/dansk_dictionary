@@ -6,6 +6,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "web": "expo start --web",
+    "ci:check": "npm run typecheck && npm run lint && npm test && npm run format:check && expo-doctor && expo export --platform android --output-dir dist",
     "typecheck": "tsc --noEmit",
     "lint": "eslint app src __tests__",
     "format": "prettier --write .",
