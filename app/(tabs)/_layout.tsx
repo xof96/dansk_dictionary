@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
+import { typography } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 export default function TabLayout() {
@@ -9,10 +10,31 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
+        tabBarActiveTintColor: colors.primaryForeground,
         tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        tabBarLabelStyle: { fontSize: 12 },
+        tabBarActiveBackgroundColor: colors.primary,
+        tabBarStyle: {
+          height: 70,
+          marginHorizontal: 12,
+          marginBottom: 10,
+          paddingHorizontal: 6,
+          paddingVertical: 6,
+          backgroundColor: colors.navBackground,
+          borderTopWidth: 0,
+          borderRadius: 16,
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.16,
+          shadowRadius: 14,
+          elevation: 8,
+        },
+        tabBarItemStyle: {
+          marginHorizontal: 2,
+          marginVertical: 4,
+          paddingVertical: 4,
+          borderRadius: 10,
+        },
+        tabBarLabelStyle: { fontFamily: typography.medium, fontSize: 11 },
       }}
     >
       <Tabs.Screen
@@ -20,15 +42,17 @@ export default function TabLayout() {
         options={{
           title: 'Buscar',
           tabBarAccessibilityLabel: 'Buscar en el diccionario',
-          tabBarIcon: ({ color, size }) => <Ionicons name="search" color={color} size={size} />,
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'search' : 'search-outline'} color={color} size={size} />
+          ),
         }}
       />
       <Tabs.Screen
         name="favorites"
         options={{
           title: 'Favoritos',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'heart' : 'heart-outline'} color={color} size={size} />
           ),
         }}
       />
@@ -36,8 +60,8 @@ export default function TabLayout() {
         name="history"
         options={{
           title: 'Historial',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons name={focused ? 'time' : 'time-outline'} color={color} size={size} />
           ),
         }}
       />
@@ -45,8 +69,12 @@ export default function TabLayout() {
         name="information"
         options={{
           title: 'Información',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="information-circle-outline" color={color} size={size} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'information-circle' : 'information-circle-outline'}
+              color={color}
+              size={size}
+            />
           ),
         }}
       />

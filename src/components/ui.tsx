@@ -1,8 +1,10 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { PropsWithChildren, ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
   ScrollView,
+  StyleProp,
   StyleSheet,
   Text,
   TextProps,
@@ -12,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { typography } from '@/constants/theme';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 export function Screen({ children }: PropsWithChildren) {
@@ -23,10 +26,17 @@ export function Screen({ children }: PropsWithChildren) {
   );
 }
 
-export function PageScroll({ children }: PropsWithChildren) {
+export function PageScroll({
+  children,
+  contentContainerStyle,
+}: PropsWithChildren<{ contentContainerStyle?: StyleProp<ViewStyle> }>) {
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={[styles.page, contentContainerStyle]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {children}
       </ScrollView>
     </Screen>
@@ -40,8 +50,8 @@ export function AppText({
   ...textProps
 }: PropsWithChildren<
   Omit<TextProps, 'style'> & {
-    variant?: 'title' | 'heading' | 'body' | 'caption';
-    style?: TextStyle;
+    variant?: 'display' | 'title' | 'heading' | 'body' | 'caption';
+    style?: StyleProp<TextStyle>;
   }
 >) {
   const colors = useAppTheme();
@@ -60,22 +70,50 @@ export function AppText({
   );
 }
 
-export function Card({ children, style }: PropsWithChildren<{ style?: ViewStyle }>) {
+export function Card({
+  children,
+  style,
+  tone = 'surface',
+}: PropsWithChildren<{ style?: StyleProp<ViewStyle>; tone?: 'surface' | 'soft' }>) {
   const colors = useAppTheme();
   return (
     <View
-      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, style]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: tone === 'soft' ? colors.accentSoft : colors.surface,
+          borderColor: colors.border,
+        },
+        style,
+      ]}
     >
       {children}
     </View>
   );
 }
 
-export function Pill({ children }: PropsWithChildren) {
+export function Pill({
+  children,
+  tone = 'accent',
+}: PropsWithChildren<{ tone?: 'accent' | 'neutral' | 'pink' | 'yellow' }>) {
   const colors = useAppTheme();
+  const backgroundColor =
+    tone === 'pink'
+      ? colors.accentPink
+      : tone === 'yellow'
+        ? colors.accentYellow
+        : tone === 'neutral'
+          ? colors.background
+          : colors.primarySoft;
+  const foregroundColor =
+    tone === 'accent'
+      ? colors.accent
+      : tone === 'pink' || tone === 'yellow'
+        ? '#171717'
+        : colors.text;
   return (
-    <View style={[styles.pill, { backgroundColor: colors.primarySoft }]}>
-      <AppText variant="caption" style={{ color: colors.primary }}>
+    <View style={[styles.pill, { backgroundColor, borderColor: colors.border }]}>
+      <AppText variant="caption" style={[styles.pillText, { color: foregroundColor }]}>
         {children}
       </AppText>
     </View>
@@ -88,6 +126,7 @@ export function ActionButton({
   icon,
   disabled = false,
   kind = 'primary',
+  compact = false,
   accessibilityHint,
 }: {
   label: string;
@@ -95,12 +134,13 @@ export function ActionButton({
   icon?: ReactNode;
   disabled?: boolean;
   kind?: 'primary' | 'secondary' | 'danger';
+  compact?: boolean;
   accessibilityHint?: string;
 }) {
   const colors = useAppTheme();
   const backgroundColor = kind === 'primary' ? colors.primary : colors.surface;
   const foregroundColor =
-    kind === 'primary' ? colors.background : kind === 'danger' ? colors.danger : colors.primary;
+    kind === 'primary' ? colors.primaryForeground : kind === 'danger' ? colors.danger : colors.text;
   return (
     <Pressable
       accessibilityRole="button"
@@ -110,7 +150,12 @@ export function ActionButton({
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor, borderColor: kind === 'primary' ? colors.primary : colors.border },
+        compact && styles.compactButton,
+        {
+          backgroundColor,
+          borderColor: kind === 'primary' ? colors.primary : colors.border,
+          shadowColor: colors.shadow,
+        },
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}
@@ -121,19 +166,108 @@ export function ActionButton({
   );
 }
 
-export function LoadingState({ label = 'Consultando fuentes…' }: { label?: string }) {
+export function SuggestionButton({ label, onPress }: { label: string; onPress: () => void }) {
   const colors = useAppTheme();
   return (
-    <View accessibilityRole="progressbar" accessibilityLabel={label} style={styles.centerState}>
-      <ActivityIndicator size="large" color={colors.primary} />
-      <AppText>{label}</AppText>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Buscar ${label}`}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.suggestion,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.accent,
+          shadowColor: colors.glow,
+        },
+        pressed && styles.pressed,
+      ]}
+    >
+      <AppText style={[styles.suggestionText, { color: colors.accent }]}>{label}</AppText>
+    </Pressable>
+  );
+}
+
+export function DenmarkFlag() {
+  const colors = useAppTheme();
+  return (
+    <View
+      accessibilityLabel="Bandera de Dinamarca"
+      style={[styles.flag, { borderColor: colors.surface, shadowColor: colors.shadow }]}
+    >
+      <View style={styles.flagHorizontal} />
+      <View style={styles.flagVertical} />
     </View>
   );
 }
 
+export function GradientHeader({
+  eyebrow,
+  title,
+  description,
+  action,
+  children,
+}: PropsWithChildren<{
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  action?: ReactNode;
+}>) {
+  const colors = useAppTheme();
+  return (
+    <LinearGradient
+      colors={[colors.heroStart, colors.heroMiddle, colors.heroEnd]}
+      end={{ x: 1, y: 1 }}
+      start={{ x: 0, y: 0 }}
+      style={[styles.gradientHeader, { borderColor: colors.border }]}
+    >
+      <View style={styles.headerTopLine}>
+        <View style={styles.headerCopy}>
+          {eyebrow ? (
+            <AppText variant="caption" style={[styles.eyebrow, { color: colors.accent }]}>
+              {eyebrow}
+            </AppText>
+          ) : null}
+          <AppText variant="display">{title}</AppText>
+        </View>
+        {action}
+      </View>
+      {description ? (
+        <AppText style={[styles.headerDescription, { color: colors.muted }]}>{description}</AppText>
+      ) : null}
+      {children}
+    </LinearGradient>
+  );
+}
+
+export function SectionHeading({ title, action }: { title: string; action?: ReactNode }) {
+  return (
+    <View style={styles.sectionHeading}>
+      <AppText variant="heading">{title}</AppText>
+      {action}
+    </View>
+  );
+}
+
+export function LoadingState({ label = 'Consultando fuentes…' }: { label?: string }) {
+  const colors = useAppTheme();
+  return (
+    <Card>
+      <View accessibilityRole="progressbar" accessibilityLabel={label} style={styles.centerState}>
+        <View style={[styles.loadingOrb, { backgroundColor: colors.accentSoft }]}>
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
+        <AppText>{label}</AppText>
+      </View>
+    </Card>
+  );
+}
+
 export function EmptyState({ title, message }: { title: string; message: string }) {
+  const colors = useAppTheme();
   return (
     <Card style={styles.centerState}>
+      <View style={[styles.emptyMark, { backgroundColor: colors.accentSoft }]} />
       <AppText variant="heading">{title}</AppText>
       <AppText variant="caption" style={styles.centerText}>
         {message}
@@ -144,16 +278,39 @@ export function EmptyState({ title, message }: { title: string; message: string 
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  page: { padding: 20, gap: 16, paddingBottom: 40 },
-  title: { fontSize: 36, lineHeight: 42, fontWeight: '800', letterSpacing: -0.8 },
-  heading: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
-  body: { fontSize: 17, lineHeight: 25 },
-  caption: { fontSize: 14, lineHeight: 20 },
-  card: { borderRadius: 18, borderWidth: 1, padding: 16, gap: 12 },
-  pill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, alignSelf: 'flex-start' },
+  page: { padding: 18, gap: 18, paddingBottom: 38 },
+  display: {
+    fontFamily: typography.extraBold,
+    fontSize: 38,
+    lineHeight: 41,
+    letterSpacing: -1.4,
+  },
+  title: {
+    fontFamily: typography.extraBold,
+    fontSize: 34,
+    lineHeight: 39,
+    letterSpacing: -1.1,
+  },
+  heading: {
+    fontFamily: typography.semibold,
+    fontSize: 20,
+    lineHeight: 25,
+    letterSpacing: -0.3,
+  },
+  body: { fontFamily: typography.regular, fontSize: 16, lineHeight: 24 },
+  caption: { fontFamily: typography.regular, fontSize: 13, lineHeight: 19 },
+  card: { borderRadius: 20, borderWidth: 1, padding: 17, gap: 12 },
+  pill: {
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    alignSelf: 'flex-start',
+  },
+  pillText: { fontFamily: typography.medium, lineHeight: 17 },
   button: {
-    minHeight: 48,
-    borderRadius: 13,
+    minHeight: 46,
+    borderRadius: 9,
     paddingHorizontal: 16,
     paddingVertical: 11,
     borderWidth: 1,
@@ -161,10 +318,94 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  buttonText: { fontSize: 16, fontWeight: '700' },
-  pressed: { opacity: 0.72 },
-  disabled: { opacity: 0.45 },
+  compactButton: { minHeight: 42, paddingHorizontal: 13, paddingVertical: 8 },
+  buttonText: { fontFamily: typography.semibold, fontSize: 15, lineHeight: 20 },
+  suggestion: {
+    minHeight: 46,
+    minWidth: 74,
+    paddingHorizontal: 17,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.32,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  suggestionText: { fontFamily: typography.semibold },
+  pressed: { opacity: 0.7, transform: [{ scale: 0.98 }] },
+  disabled: { opacity: 0.4 },
+  flag: {
+    width: 58,
+    height: 38,
+    overflow: 'hidden',
+    backgroundColor: '#C8102E',
+    borderRadius: 9,
+    borderWidth: 2,
+    transform: [{ rotate: '3deg' }],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 7,
+    elevation: 4,
+  },
+  flagHorizontal: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 15,
+    height: 7,
+    backgroundColor: '#FFFFFF',
+  },
+  flagVertical: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 18,
+    width: 7,
+    backgroundColor: '#FFFFFF',
+  },
+  gradientHeader: {
+    borderRadius: 26,
+    borderWidth: 1,
+    padding: 20,
+    gap: 13,
+    overflow: 'hidden',
+  },
+  headerTopLine: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 14,
+  },
+  headerCopy: { flex: 1, gap: 7 },
+  eyebrow: {
+    fontFamily: typography.bold,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+  },
+  headerDescription: { maxWidth: 520 },
+  sectionHeading: {
+    minHeight: 44,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
   centerState: { alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 30 },
-  centerText: { textAlign: 'center' },
+  centerText: { textAlign: 'center', maxWidth: 320 },
+  loadingOrb: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyMark: { width: 46, height: 7, borderRadius: 999 },
 });

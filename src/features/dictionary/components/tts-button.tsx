@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ActionButton, AppText } from '@/components/ui';
+import { useAppTheme } from '@/hooks/use-app-theme';
 
 export function TtsButton({ text, slow = false }: { text: string; slow?: boolean }) {
+  const colors = useAppTheme();
   const [playing, setPlaying] = useState(false);
   const [error, setError] = useState<string>();
   const label = playing ? 'Detener voz sintética' : slow ? 'Escuchar lento' : 'Escuchar';
@@ -38,7 +40,7 @@ export function TtsButton({ text, slow = false }: { text: string; slow?: boolean
         kind="secondary"
         onPress={() => void toggle()}
         accessibilityHint="Usa la voz sintética danesa instalada en el dispositivo"
-        icon={<Ionicons name={playing ? 'stop' : 'volume-medium'} size={20} />}
+        icon={<Ionicons name={playing ? 'stop' : 'volume-medium'} size={20} color={colors.text} />}
       />
       <AppText variant="caption">Voz sintética · da-DK{slow ? ' · velocidad lenta' : ''}</AppText>
       {error ? <AppText variant="caption">{error} Pulsa de nuevo para reintentar.</AppText> : null}

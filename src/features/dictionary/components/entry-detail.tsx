@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { ActionButton, AppText, Card, Pill } from '@/components/ui';
+import { typography } from '@/constants/theme';
 import { DataAttribution, DictionaryEntry, GrammaticalFeatures } from '@/domain/models/dictionary';
 import { buildEntryHref } from '@/domain/services/dictionary-navigation';
 import { TtsButton } from '@/features/dictionary/components/tts-button';
@@ -52,6 +54,65 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
 
   return (
     <View style={styles.content}>
+      <LinearGradient
+        colors={[colors.heroStart, colors.heroMiddle, colors.heroEnd]}
+        end={{ x: 1, y: 1 }}
+        start={{ x: 0, y: 0 }}
+        style={[styles.wordHero, { borderColor: colors.border }]}
+      >
+        <View style={styles.heroToolbar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.heroButton,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons name="arrow-back" size={21} color={colors.text} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={favorite.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            disabled={favorite.isUpdating}
+            onPress={() => void favorite.toggle()}
+            style={({ pressed }) => [
+              styles.heroButton,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+              pressed && styles.pressed,
+            ]}
+          >
+            <Ionicons
+              name={favorite.isFavorite ? 'heart' : 'heart-outline'}
+              size={25}
+              color={favorite.isFavorite ? colors.danger : colors.text}
+            />
+          </Pressable>
+        </View>
+        <View style={styles.titleBlock}>
+          <AppText variant="caption" style={[styles.eyebrow, { color: colors.accent }]}>
+            Entrada danesa exacta
+          </AppText>
+          <AppText variant="display">{entry.queriedForm}</AppText>
+          <View style={styles.inlineWrap}>
+            <Pill tone="neutral">
+              {entry.entryKind === 'surface-form' ? 'forma flexionada' : 'lema'}
+            </Pill>
+            {mainUnit?.features.gender ? (
+              <Pill tone="yellow">género {mainUnit.features.gender}</Pill>
+            ) : null}
+          </View>
+          {mainUnit ? (
+            <AppText>
+              {mainUnit.label}
+              {featureSummary(mainUnit.features) ? ` · ${featureSummary(mainUnit.features)}` : ''}
+            </AppText>
+          ) : null}
+        </View>
+      </LinearGradient>
+
       {entry.cacheState === 'stale-cache' ? (
         <Card style={{ borderColor: colors.warning }}>
           <AppText variant="heading">Copia guardada sin conexión</AppText>
@@ -63,36 +124,8 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
         <Pill>Disponible sin conexión · copia vigente</Pill>
       ) : null}
 
-      <View style={styles.titleBlock}>
-        <View style={styles.titleRow}>
-          <AppText variant="title" style={styles.flex}>
-            {entry.queriedForm}
-          </AppText>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={favorite.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-            disabled={favorite.isUpdating}
-            onPress={() => void favorite.toggle()}
-            style={styles.favoriteButton}
-          >
-            <Ionicons
-              name={favorite.isFavorite ? 'heart' : 'heart-outline'}
-              size={30}
-              color={favorite.isFavorite ? colors.danger : colors.primary}
-            />
-          </Pressable>
-        </View>
-        <Pill>{entry.entryKind === 'surface-form' ? 'forma flexionada' : 'lema'}</Pill>
-        {mainUnit ? (
-          <AppText>
-            {mainUnit.label}
-            {featureSummary(mainUnit.features) ? ` · ${featureSummary(mainUnit.features)}` : ''}
-          </AppText>
-        ) : null}
-      </View>
-
       {entry.formRelations.map((relation) => (
-        <Card key={`${relation.lemma}:${relation.relationLabel}`}>
+        <Card key={`${relation.lemma}:${relation.relationLabel}`} tone="soft">
           <AppText variant="caption">Relación morfológica</AppText>
           <View style={styles.inlineWrap}>
             <AppText>
@@ -103,7 +136,7 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
               accessibilityLabel={`Abrir el lema ${relation.lemma}`}
               onPress={() => openEntry(relation.lemma)}
             >
-              <AppText style={{ color: colors.primary, fontWeight: '800' }}>
+              <AppText style={{ color: colors.accent, fontFamily: typography.bold }}>
                 {relation.lemma}
               </AppText>
             </Pressable>
@@ -187,7 +220,7 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
                       pressed && styles.pressed,
                     ]}
                   >
-                    <AppText style={{ fontWeight: '800' }}>{inflection.form}</AppText>
+                    <AppText style={{ fontFamily: typography.bold }}>{inflection.form}</AppText>
                     <AppText variant="caption">{inflection.label}</AppText>
                   </Pressable>
                 ))}
@@ -198,7 +231,7 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
       ))}
 
       {entry.examples.map((example) => (
-        <Card key={example.id}>
+        <Card key={example.id} tone="soft">
           <View style={styles.inlineWrap}>
             <AppText variant="heading">Ejemplo</AppText>
             <Pill>{example.kind === 'pedagogical' ? 'pedagógico propio' : 'de la fuente'}</Pill>
@@ -225,7 +258,7 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
         <AppText variant="heading">Fuentes y atribución</AppText>
         {entry.attributions.map((attribution) => (
           <View key={attribution.id} style={styles.itemGroup}>
-            <AppText style={{ fontWeight: '700' }}>{attribution.provider}</AppText>
+            <AppText style={{ fontFamily: typography.semibold }}>{attribution.provider}</AppText>
             <AppText variant="caption">{attribution.attributionText}</AppText>
             <AppText variant="caption">
               {attribution.licenseName} · consultado{' '}
@@ -247,18 +280,31 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
 
 const styles = StyleSheet.create({
   content: { gap: 16 },
-  titleBlock: { gap: 10 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  wordHero: { borderRadius: 27, borderWidth: 1, padding: 20, gap: 24, overflow: 'hidden' },
+  heroToolbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  heroButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleBlock: { gap: 11, paddingBottom: 2 },
+  eyebrow: {
+    fontFamily: typography.bold,
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+  },
   flex: { flex: 1 },
-  favoriteButton: { minHeight: 48, minWidth: 48, alignItems: 'center', justifyContent: 'center' },
   inlineWrap: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
   itemGroup: { gap: 7 },
-  ipa: { fontSize: 25, lineHeight: 32, fontWeight: '600' },
+  ipa: { fontFamily: typography.semibold, fontSize: 25, lineHeight: 32 },
   sense: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, gap: 8 },
   translationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   inflections: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  inflection: { borderWidth: 1, borderRadius: 12, padding: 11, minWidth: 120, gap: 2 },
+  inflection: { borderWidth: 1, borderRadius: 10, padding: 12, minWidth: 120, gap: 2 },
   pressed: { opacity: 0.65 },
-  example: { fontSize: 21, lineHeight: 29, fontWeight: '600' },
+  example: { fontFamily: typography.semibold, fontSize: 21, lineHeight: 29 },
   audioRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
 });
