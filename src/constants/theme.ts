@@ -1,9 +1,9 @@
 export const typography = {
-  regular: 'Geist_400Regular',
-  medium: 'Geist_500Medium',
-  semibold: 'Geist_600SemiBold',
-  bold: 'Geist_700Bold',
-  extraBold: 'Geist_800ExtraBold',
+  regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+  extraBold: 'Inter_800ExtraBold',
 } as const;
 
 export const palette = {
