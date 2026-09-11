@@ -2,10 +2,10 @@
 
 ## Preparación
 
-1. Usa Node.js 20.19 o superior.
+1. Usa Node.js 22.13 o superior.
 2. Ejecuta `npm install`.
 3. Copia `.env.example` a `.env` solo si necesitas cambiar una URL pública. Nunca guardes claves.
-4. Ejecuta `npm start` y abre el QR con Expo Go SDK 54.
+4. Ejecuta `npm start` y abre el QR con un cliente compatible con Expo SDK 57.
 
 ## Antes de proponer un cambio
 
@@ -25,4 +25,4 @@ No copies DDO. Revisa por separado la licencia de texto y medios; una página CC
 
 ## Definición de terminado
 
-El cambio mantiene SDK 54, no altera silenciosamente forma/lema, valida respuestas externas, presenta atribución, funciona con datos parciales, añade pruebas de comportamiento relevantes y actualiza la documentación afectada.
+El cambio mantiene SDK 57, no altera silenciosamente forma/lema, valida respuestas externas, presenta atribución, funciona con datos parciales, añade pruebas de comportamiento relevantes y actualiza la documentación afectada.

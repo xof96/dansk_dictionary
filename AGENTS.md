@@ -2,8 +2,9 @@
 
 ## Restricciones cerradas
 
-- Mantener Expo SDK 54. No actualizar `expo`, React ni React Native a otra matriz sin autorización expresa.
-- Leer la documentación versionada: https://docs.expo.dev/versions/v54.0.0/.
+- Mantener Expo SDK 57. No actualizar `expo`, React ni React Native a otra matriz sin autorización expresa.
+- Mantener la matriz Expo 57, React 19.2.3 y React Native 0.86.x; usar Node.js 22.13.x o superior.
+- Leer la documentación versionada: https://docs.expo.dev/versions/v57.0.0/.
 - `hedder` y cualquier forma flexionada son entradas navegables propias. No redirigir silenciosamente al lema.
 - No inventar IPA, audio humano, definiciones ni rasgos gramaticales.
 - No extraer ni copiar contenido de Den Danske Ordbog.

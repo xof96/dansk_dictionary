@@ -1,6 +1,6 @@
 # Dansk Dictionary
 
-Aplicación Android de diccionario danés para adultos hispanohablantes, construida con React Native, Expo SDK 54 y TypeScript estricto. Busca desde danés, conserva formas flexionadas como entradas propias y presenta traducciones al español e inglés sin sustituir el original.
+Aplicación Android de diccionario danés para adultos hispanohablantes, construida con React Native, Expo SDK 57 y TypeScript estricto. Busca desde danés, conserva formas flexionadas como entradas propias y presenta traducciones al español e inglés sin sustituir el original.
 
 ## Estado funcional
 
@@ -15,9 +15,9 @@ Aplicación Android de diccionario danés para adultos hispanohablantes, constru
 
 ## Requisitos
 
-- Node.js 20.19 o superior. La implementación se verificó con Node 24.18.0 y npm 11.16.0.
+- Node.js 22.13 o superior. La implementación se verificó con Node 24.18.0 y npm 11.16.0.
 - npm, incluido con Node.js.
-- Para ejecutarla en un teléfono: Expo Go compatible con SDK 54 y el teléfono y el ordenador conectados a la misma red.
+- Para ejecutarla en un teléfono: un cliente compatible con Expo SDK 57 y el teléfono y el ordenador conectados a la misma red.
 - Para ejecutarla en un emulador: Android Studio con un dispositivo virtual iniciado.
 
 ## Arranque local
@@ -59,9 +59,9 @@ npm ci
 npm run ci:check
 ```
 
-`ci:check` ejecuta typecheck, lint, tests offline, formato, Expo Doctor y la exportación Android. El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) invoca ese mismo script en cada push y pull request contra `main`, además de permitir una ejecución manual. Usa Node 20.19.4, permisos de solo lectura y la caché de npm derivada de `package-lock.json`; no recibe secretos. Metro y el bundle Android se verificaron en este entorno; el escaneo en un teléfono físico no puede verificarse desde aquí.
+`ci:check` ejecuta typecheck, lint, tests offline, formato, Expo Doctor y la exportación Android. El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) invoca ese mismo script en cada push y pull request contra `main`, además de permitir una ejecución manual. Usa Node 22.13.1, permisos de solo lectura y la caché de npm derivada de `package-lock.json`; no recibe secretos. Metro y el bundle Android se verificaron en este entorno; el escaneo en un teléfono físico no puede verificarse desde aquí.
 
-La auditoría de dependencias se ejecuta por separado porque las alertas transitivas actuales requieren evaluación bajo la restricción de SDK 54:
+La auditoría de dependencias se ejecuta por separado porque las alertas transitivas actuales requieren evaluación bajo la restricción de SDK 57:
 
 ```powershell
 npm audit --omit=dev
@@ -71,23 +71,23 @@ No ejecutes `npm audit fix --force`: puede proponer una matriz de React Native i
 
 ## Dependencias principales
 
-| Dependencia                            | Uso                                     | Compatibilidad                                       |
-| -------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
-| `expo ~54.0.37`                        | runtime y herramientas                  | SDK fijado por requisito                             |
-| `react-native 0.81.5` / `react 19.1.0` | interfaz nativa                         | matriz oficial de SDK 54                             |
-| `expo-router ~6.0.24`                  | navegación por archivos                 | versión recomendada para SDK 54                      |
-| `@tanstack/react-query ^5.101.4`       | estado remoto, cancelación y reintentos | librería JS compatible con RN 0.81                   |
-| `zod ^4.4.3`                           | contratos externos                      | librería TypeScript sin módulo nativo                |
-| `expo-sqlite ~16.0.10`                 | caché, historial y favoritos            | versión recomendada para SDK 54, incluida en Expo Go |
-| `expo-speech ~14.0.8`                  | TTS danés identificado                  | versión instalada por `expo install` para SDK 54     |
-| `expo-network ~8.0.8`                  | estado online/offline                   | versión instalada por `expo install` para SDK 54     |
-| `jest-expo ~54.0.18`                   | runtime de tests                        | preset específico del SDK                            |
-| `@testing-library/react-native 13.3.3` | pruebas de comportamiento RN            | fijada en v13 estable; v14 beta requiere React 19.2  |
-| `react-test-renderer 19.1.0`           | par de RNTL 13                          | fijada a la misma versión de React del SDK           |
+| Dependencia                            | Uso                                     | Compatibilidad                                   |
+| -------------------------------------- | --------------------------------------- | ------------------------------------------------ |
+| `expo ~57.0.22`                        | runtime y herramientas                  | SDK fijado por requisito                         |
+| `react-native 0.86.3` / `react 19.2.3` | interfaz nativa                         | matriz oficial de SDK 57                         |
+| `expo-router ~57.0.21`                 | navegación por archivos                 | versión instalada para SDK 57                    |
+| `@tanstack/react-query ^5.101.4`       | estado remoto, cancelación y reintentos | librería TypeScript sin módulo nativo            |
+| `zod ^4.4.3`                           | contratos externos                      | librería TypeScript sin módulo nativo            |
+| `expo-sqlite ~57.0.3`                  | caché, historial y favoritos            | versión instalada por `expo install` para SDK 57 |
+| `expo-speech ~57.0.3`                  | TTS danés identificado                  | versión instalada por `expo install` para SDK 57 |
+| `expo-network ~57.0.2`                 | estado online/offline                   | versión instalada por `expo install` para SDK 57 |
+| `jest-expo ~57.0.5`                    | runtime de tests                        | preset específico del SDK                        |
+| `@testing-library/react-native 13.3.3` | pruebas de comportamiento RN            | versión estable validada con la suite actual     |
+| `react-test-renderer ^19.2.3`          | renderizado para tests                  | misma línea de React que el SDK                  |
 
 No se ha añadido backend: el proveedor actual no requiere claves y el procesamiento cabe de forma segura en el cliente. Tampoco se ha elegido licencia para el código del proyecto.
 
-El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. Son dependencias transitivas de las herramientas Expo 54; se validaron con Expo Doctor y un bundle Android. Las alertas restantes de `npm audit --omit=dev` se investigan por separado para no introducir una actualización incompatible con SDK 54.
+El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. Son dependencias transitivas de las herramientas Expo 57; se validan con Expo Doctor y un bundle Android. Las alertas restantes de `npm audit --omit=dev` se investigan por separado para no introducir una actualización incompatible con SDK 57.
 
 ## Documentación
 
@@ -96,3 +96,4 @@ El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. So
 - [IPA y pronunciación](docs/ipa.md)
 - [Aspectos legales y licencias](docs/legal-and-licenses.md)
 - [Contribución](CONTRIBUTING.md)
+- [Decisión vigente sobre Expo SDK 57](docs/decisions/0003-upgrade-expo-sdk-57.md)

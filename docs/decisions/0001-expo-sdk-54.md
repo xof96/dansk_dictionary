@@ -1,6 +1,6 @@
 # ADR 0001: mantener Expo SDK 54
 
-- Estado: aceptada y cerrada.
+- Estado: reemplazada por [ADR 0003](0003-upgrade-expo-sdk-57.md) el 2026-09-11.
 - Fecha: 2026-08-02.
 
 ## Contexto
