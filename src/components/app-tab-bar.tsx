@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { Tabs } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,8 +17,9 @@ const tabIcons: Record<
   information: { active: 'information-circle', inactive: 'information-circle-outline' },
 };
 const defaultTabIcons = { active: 'ellipse', inactive: 'ellipse-outline' } as const;
+type AppTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
-export function AppTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
   const colors = useAppTheme();
   const insets = useSafeAreaInsets();
 

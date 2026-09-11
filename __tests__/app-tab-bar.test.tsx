@@ -1,7 +1,9 @@
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import type { ComponentProps } from 'react';
 
 import { AppTabBar } from '@/components/app-tab-bar';
+
+type AppTabBarProps = ComponentProps<typeof AppTabBar>;
 
 jest.mock('@expo/vector-icons', () => {
   const React = jest.requireActual<typeof import('react')>('react');
@@ -57,7 +59,7 @@ function buildProps({
     },
     navigation,
     insets: { top: 0, right: 0, bottom: 24, left: 0 },
-  } as unknown as BottomTabBarProps;
+  } as unknown as AppTabBarProps;
 
   return { navigation, props };
 }

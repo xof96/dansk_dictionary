@@ -4,10 +4,9 @@ import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
 import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
 import { Inter_800ExtraBold } from '@expo-google-fonts/inter/800ExtraBold';
 import { useFonts } from '@expo-google-fonts/inter/useFonts';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
-import { Suspense } from 'react';
 import { ActivityIndicator, StyleSheet, useColorScheme, View } from 'react-native';
 
 import { palette } from '@/constants/theme';
@@ -45,23 +44,15 @@ export default function RootLayout() {
   }
 
   return (
-    <Suspense
-      fallback={
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" />
-        </View>
-      }
-    >
-      <AppProviders>
-        <ThemeProvider value={navigationTheme}>
-          <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="entry/[term]" options={{ headerShown: false }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </AppProviders>
-    </Suspense>
+    <AppProviders>
+      <ThemeProvider value={navigationTheme}>
+        <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background } }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="entry/[term]" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </AppProviders>
   );
 }
 

@@ -2,6 +2,7 @@ module.exports = {
   preset: 'jest-expo',
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
+  moduleDirectories: ['node_modules', '<rootDir>/node_modules/expo/node_modules'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
