@@ -1,11 +1,21 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import { StoredEntryRow } from '@/components/stored-entry-row';
-import { ActionButton, AppText, Card, EmptyState, LoadingState, PageScroll } from '@/components/ui';
+import {
+  ActionButton,
+  Card,
+  EmptyState,
+  GradientHeader,
+  LoadingState,
+  PageScroll,
+} from '@/components/ui';
 import { useHistory } from '@/features/history/use-history';
+import { useAppTheme } from '@/hooks/use-app-theme';
 
 export default function HistoryScreen() {
+  const colors = useAppTheme();
   const history = useHistory();
   const confirmClear = () => {
     Alert.alert('Borrar todo el historial', 'Esta acción elimina todas las consultas recientes.', [
@@ -16,12 +26,22 @@ export default function HistoryScreen() {
 
   return (
     <PageScroll>
-      <View style={styles.header}>
-        <AppText variant="title">Historial</AppText>
+      <GradientHeader
+        eyebrow="Consultas exactas"
+        title="Historial"
+        description="Vuelve a cualquier forma que hayas consultado, incluso cuando no tengas conexión."
+        action={
+          <View style={[styles.iconTile, { backgroundColor: colors.surface }]}>
+            <Ionicons name="time" size={27} color={colors.accent} />
+          </View>
+        }
+      >
         {history.items.length > 0 ? (
-          <ActionButton label="Borrar todo" kind="danger" onPress={confirmClear} />
+          <View style={styles.clearButton}>
+            <ActionButton label="Borrar todo" kind="danger" compact onPress={confirmClear} />
+          </View>
         ) : null}
-      </View>
+      </GradientHeader>
       {history.loading ? (
         <LoadingState label="Cargando historial…" />
       ) : history.items.length === 0 ? (
@@ -30,7 +50,7 @@ export default function HistoryScreen() {
           message="Aquí se conserva la forma exacta que buscaste."
         />
       ) : (
-        <Card>
+        <Card style={styles.listCard}>
           {history.items.map((item) => (
             <StoredEntryRow
               key={item.query}
@@ -49,4 +69,14 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({ header: { gap: 12, alignItems: 'flex-start' } });
+const styles = StyleSheet.create({
+  iconTile: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearButton: { alignItems: 'flex-start' },
+  listCard: { paddingTop: 2, paddingBottom: 2 },
+});

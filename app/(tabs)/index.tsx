@@ -4,7 +4,17 @@ import { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { StoredEntryRow } from '@/components/stored-entry-row';
-import { AppText, Card, EmptyState, PageScroll } from '@/components/ui';
+import {
+  AppText,
+  Card,
+  DenmarkFlag,
+  EmptyState,
+  GradientHeader,
+  PageScroll,
+  SectionHeading,
+  SuggestionButton,
+} from '@/components/ui';
+import { typography } from '@/constants/theme';
 import { normalizeSearchTerm } from '@/domain/services/dictionary-policy';
 import { useHistory } from '@/features/history/use-history';
 import { useAppTheme } from '@/hooks/use-app-theme';
@@ -27,81 +37,94 @@ export default function SearchScreen() {
 
   return (
     <PageScroll>
-      <View style={styles.hero}>
-        <AppText variant="caption" style={{ color: colors.primary, fontWeight: '800' }}>
-          DANSK → ESPAÑOL · ENGLISH
-        </AppText>
-        <AppText variant="title">¿Qué palabra buscas?</AppText>
-        <AppText variant="body" style={{ color: colors.muted }}>
-          Busca una palabra danesa exacta, también si está flexionada.
-        </AppText>
-      </View>
-
-      <View
-        style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      <GradientHeader
+        eyebrow="Dansk → español · English"
+        title="Encuentra la palabra exacta."
+        description="Busca una palabra danesa tal como aparece, también cuando está flexionada."
+        action={<DenmarkFlag />}
       >
-        <Ionicons name="search" size={22} color={colors.muted} />
-        <TextInput
-          accessibilityLabel="Palabra danesa"
-          accessibilityHint="Admite las letras æ, ø y å"
-          autoCapitalize="none"
-          autoCorrect={false}
-          enterKeyHint="search"
-          onChangeText={setTerm}
-          onSubmitEditing={submit}
-          placeholder="hus, hedde, hedder…"
-          placeholderTextColor={colors.muted}
-          returnKeyType="search"
-          style={[styles.input, { color: colors.text }]}
-          value={term}
-        />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Buscar"
-          disabled={!term.trim()}
-          onPress={submit}
-          style={({ pressed }) => [
-            styles.searchButton,
-            { backgroundColor: colors.primary },
-            pressed && styles.pressed,
-            !term.trim() && styles.disabled,
+        <View
+          style={[
+            styles.searchBox,
+            { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
-          <Ionicons name="arrow-forward" size={23} color={colors.background} />
-        </Pressable>
-      </View>
+          <Ionicons name="search-outline" size={21} color={colors.muted} />
+          <TextInput
+            accessibilityLabel="Palabra danesa"
+            accessibilityHint="Admite las letras æ, ø y å"
+            autoCapitalize="none"
+            autoCorrect={false}
+            enterKeyHint="search"
+            onChangeText={setTerm}
+            onSubmitEditing={submit}
+            placeholder="hus, hedde, hedder…"
+            placeholderTextColor={colors.muted}
+            returnKeyType="search"
+            style={[styles.input, { color: colors.text }]}
+            value={term}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Buscar"
+            disabled={!term.trim()}
+            onPress={submit}
+            style={({ pressed }) => [
+              styles.searchButton,
+              { backgroundColor: colors.primary },
+              pressed && styles.pressed,
+              !term.trim() && styles.disabled,
+            ]}
+          >
+            <Ionicons name="arrow-forward" size={21} color={colors.primaryForeground} />
+          </Pressable>
+        </View>
+        <View style={styles.exactNote}>
+          <Ionicons name="git-branch-outline" size={18} color={colors.accent} />
+          <AppText variant="caption" style={[styles.exactText, { color: colors.muted }]}>
+            Cada forma conserva su propia entrada: hedder no se sustituye por hedde.
+          </AppText>
+        </View>
+      </GradientHeader>
 
-      <Card>
-        <AppText variant="heading">Prueba el corte vertical</AppText>
+      <Card tone="soft">
+        <View style={styles.suggestionTitle}>
+          <View style={[styles.spark, { backgroundColor: colors.accentPink }]} />
+          <AppText variant="heading">Empieza por una palabra</AppText>
+        </View>
+        <AppText variant="caption">
+          Abre una consulta exacta para ver pronunciación, flexiones, traducciones y procedencia.
+        </AppText>
         <View style={styles.quickTerms}>
           {['hus', 'hedde', 'hedder'].map((quickTerm) => (
-            <Pressable
+            <SuggestionButton
               key={quickTerm}
-              accessibilityRole="button"
+              label={quickTerm}
               onPress={() => openEntry(quickTerm)}
-              style={[styles.quickTerm, { backgroundColor: colors.primarySoft }]}
-            >
-              <AppText style={{ color: colors.primary, fontWeight: '800' }}>{quickTerm}</AppText>
-            </Pressable>
+            />
           ))}
         </View>
       </Card>
 
-      <View style={styles.sectionTitle}>
-        <AppText variant="heading">Recientes</AppText>
-        <Pressable accessibilityRole="link" onPress={() => router.push('/history')}>
-          <AppText style={{ color: colors.primary, fontWeight: '700' }}>Ver todo</AppText>
-        </Pressable>
-      </View>
+      <SectionHeading
+        title="Recientes"
+        action={
+          <Pressable accessibilityRole="link" onPress={() => router.push('/history')}>
+            <AppText style={[styles.link, { color: colors.accent }]}>Ver todo</AppText>
+          </Pressable>
+        }
+      />
       {history.loading ? (
-        <AppText variant="caption">Cargando historial…</AppText>
+        <Card>
+          <AppText variant="caption">Cargando historial…</AppText>
+        </Card>
       ) : history.items.length === 0 ? (
         <EmptyState
           title="Aún no hay búsquedas"
           message="Las consultas exactas aparecerán aquí y seguirán disponibles sin conexión."
         />
       ) : (
-        <Card>
+        <Card style={styles.listCard}>
           {history.items.map((item) => (
             <StoredEntryRow
               key={item.query}
@@ -118,34 +141,30 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: 8, paddingTop: 10 },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 17,
-    padding: 7,
-    paddingLeft: 14,
+    borderRadius: 13,
+    padding: 6,
+    paddingLeft: 13,
     gap: 8,
   },
-  input: { flex: 1, minHeight: 48, fontSize: 18 },
+  input: { flex: 1, minHeight: 46, fontFamily: typography.regular, fontSize: 17 },
   searchButton: {
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 13,
+    borderRadius: 9,
   },
-  pressed: { opacity: 0.7 },
+  exactNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  exactText: { flex: 1 },
+  suggestionTitle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  spark: { width: 11, height: 11, borderRadius: 3, transform: [{ rotate: '15deg' }] },
+  quickTerms: { flexDirection: 'row', gap: 12, flexWrap: 'wrap', paddingVertical: 4 },
+  link: { fontFamily: typography.semibold, fontSize: 15 },
+  listCard: { paddingTop: 2, paddingBottom: 2 },
+  pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.4 },
-  quickTerms: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
-  quickTerm: {
-    minHeight: 48,
-    minWidth: 76,
-    paddingHorizontal: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 13,
-  },
-  sectionTitle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
 });

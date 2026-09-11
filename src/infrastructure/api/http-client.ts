@@ -1,4 +1,4 @@
-import { z, ZodType } from 'zod';
+import { ZodType } from 'zod';
 import { Platform } from 'react-native';
 
 import { DictionaryError } from '@/domain/models/errors';
@@ -110,7 +110,7 @@ export async function getValidatedJson<T>(
         'INVALID_RESPONSE',
         'Wiktionary devolvió una respuesta con un formato inesperado.',
         false,
-        { cause: z.prettifyError(parsed.error) },
+        { cause: parsed.error },
       );
     }
     return parsed.data;

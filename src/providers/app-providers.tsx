@@ -50,7 +50,7 @@ export function AppProviders({ children }: PropsWithChildren) {
   );
 
   return (
-    <SQLiteProvider databaseName="dansk-dictionary.db" onInit={migrateDatabase} useSuspense>
+    <SQLiteProvider databaseName="dansk-dictionary.db" onInit={migrateDatabase}>
       <QueryClientProvider client={queryClient}>
         <QueryEnvironment />
         {children}

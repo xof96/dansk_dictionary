@@ -1,9 +1,37 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ActionButton, AppText, Card, LoadingState, PageScroll } from '@/components/ui';
+import {
+  ActionButton,
+  AppText,
+  Card,
+  GradientHeader,
+  LoadingState,
+  PageScroll,
+  SuggestionButton,
+} from '@/components/ui';
 import { EntryDetail } from '@/features/dictionary/components/entry-detail';
 import { useDictionaryEntry } from '@/features/dictionary/hooks/use-dictionary-entry';
+import { useAppTheme } from '@/hooks/use-app-theme';
+
+function BackButton() {
+  const colors = useAppTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Volver"
+      onPress={() => router.back()}
+      style={({ pressed }) => [
+        styles.backButton,
+        { backgroundColor: colors.surface, borderColor: colors.border },
+        pressed && styles.pressed,
+      ]}
+    >
+      <Ionicons name="arrow-back" size={21} color={colors.text} />
+    </Pressable>
+  );
+}
 
 export default function EntryScreen() {
   const params = useLocalSearchParams<{ term: string | string[] }>();
@@ -13,6 +41,11 @@ export default function EntryScreen() {
   if (query.isPending) {
     return (
       <PageScroll>
+        <GradientHeader
+          eyebrow="Consulta exacta"
+          title={term || 'Buscando'}
+          action={<BackButton />}
+        />
         <LoadingState label={`Buscando “${term}”…`} />
       </PageScroll>
     );
@@ -21,6 +54,11 @@ export default function EntryScreen() {
   if (query.isError) {
     return (
       <PageScroll>
+        <GradientHeader
+          eyebrow="Consulta exacta"
+          title={term || 'Entrada'}
+          action={<BackButton />}
+        />
         <Card>
           <AppText variant="heading">No se pudo completar la consulta</AppText>
           <AppText>
@@ -38,16 +76,23 @@ export default function EntryScreen() {
   if (!query.data.entry) {
     return (
       <PageScroll>
-        <Card>
-          <AppText variant="heading">Sin coincidencia exacta para “{term}”</AppText>
-          <AppText>No se ha redirigido la búsqueda. Puedes elegir una sugerencia:</AppText>
+        <GradientHeader
+          eyebrow="Sin coincidencia exacta"
+          title={`“${term}”`}
+          description="La búsqueda no se ha redirigido a ningún lema."
+          action={<BackButton />}
+        />
+        <Card tone="soft">
+          <AppText variant="heading">Puedes elegir una sugerencia</AppText>
+          <AppText variant="caption">
+            Cada opción abrirá una entrada nueva y conservará la forma que selecciones.
+          </AppText>
           <View style={styles.suggestions}>
             {query.data.suggestions.length > 0 ? (
               query.data.suggestions.map((suggestion) => (
-                <ActionButton
+                <SuggestionButton
                   key={suggestion.term}
                   label={suggestion.term}
-                  kind="secondary"
                   onPress={() =>
                     router.push({ pathname: '/entry/[term]', params: { term: suggestion.term } })
                   }
@@ -63,10 +108,22 @@ export default function EntryScreen() {
   }
 
   return (
-    <PageScroll>
+    <PageScroll contentContainerStyle={styles.entryPage}>
       <EntryDetail entry={query.data.entry} />
     </PageScroll>
   );
 }
 
-const styles = StyleSheet.create({ suggestions: { gap: 10 } });
+const styles = StyleSheet.create({
+  backButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingVertical: 5 },
+  entryPage: { paddingTop: 10 },
+  pressed: { opacity: 0.7, transform: [{ scale: 0.98 }] },
+});

@@ -33,6 +33,7 @@ export function StoredEntryRow({
         </View>
         <AppText variant="caption">{subtitle}</AppText>
       </Pressable>
+      {!onRemove ? <Ionicons name="chevron-forward" size={20} color={colors.muted} /> : null}
       {onRemove ? (
         <Pressable
           accessibilityRole="button"
@@ -50,7 +51,7 @@ export function StoredEntryRow({
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: StyleSheet.hairlineWidth },
-  main: { flex: 1, paddingVertical: 14, gap: 4 },
+  main: { flex: 1, minHeight: 68, paddingVertical: 13, gap: 5, justifyContent: 'center' },
   termLine: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   remove: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.65 },
