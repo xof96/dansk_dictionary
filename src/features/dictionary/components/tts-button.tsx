@@ -6,6 +6,9 @@ import { StyleSheet, View } from 'react-native';
 import { ActionButton, AppText } from '@/components/ui';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
+const NORMAL_SPEECH_RATE = 0.95;
+const SLOW_SPEECH_RATE = 0.3;
+
 export function TtsButton({ text, slow = false }: { text: string; slow?: boolean }) {
   const colors = useAppTheme();
   const [playing, setPlaying] = useState(false);
@@ -23,7 +26,7 @@ export function TtsButton({ text, slow = false }: { text: string; slow?: boolean
     setPlaying(true);
     Speech.speak(text, {
       language: 'da-DK',
-      rate: slow ? 0.65 : 0.95,
+      rate: slow ? SLOW_SPEECH_RATE : NORMAL_SPEECH_RATE,
       onDone: () => setPlaying(false),
       onStopped: () => setPlaying(false),
       onError: () => {
