@@ -155,7 +155,7 @@ SQLite nativo y TTS requieren pruebas de integración en Android para cubrir el 
 - Modelo rico antes que DTO de pantalla: evita acoplar el crecimiento lingüístico al proveedor inicial.
 - SQLite como persistencia y Query como estado remoto: una sola representación durable, sin dos cachés persistentes rivales.
 - Contenido editorial estático: ejemplos pedagógicos revisables y testeables, sin IA opaca en producción.
-- RNTL 13.3.3: v14 beta pide React 19.2, incompatible con React 19.1 de SDK 54.
+- RNTL 13.3.3: base estable de pruebas de componentes, validada con React 19.2.3 y Jest Expo 57.
 
 ## Extensiones preparadas
 
