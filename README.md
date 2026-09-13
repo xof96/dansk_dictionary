@@ -61,13 +61,15 @@ npm run ci:check
 
 `ci:check` ejecuta typecheck, lint, tests offline, formato, Expo Doctor y la exportación Android. El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) invoca ese mismo script en cada push y pull request contra `main`, además de permitir una ejecución manual. Usa Node 22.13.1, permisos de solo lectura y la caché de npm derivada de `package-lock.json`; no recibe secretos. Metro y el bundle Android se verificaron en este entorno; el escaneo en un teléfono físico no puede verificarse desde aquí.
 
-La auditoría de dependencias se ejecuta por separado porque las alertas transitivas actuales requieren evaluación bajo la restricción de SDK 57:
+La auditoría de dependencias se ejecuta por separado porque las alertas transitivas requieren evaluación bajo la restricción de SDK 57:
 
 ```powershell
 npm audit --omit=dev
 ```
 
-No ejecutes `npm audit fix --force`: puede proponer una matriz de React Native incompatible. El seguimiento de estas alertas está separado del control de calidad del workflow.
+La revisión del 13 de septiembre de 2026 informa tres avisos moderados y ninguno alto o crítico. Los tres corresponden a una sola cadena: `expo-router 57.0.21 → query-string 7.1.3 → decode-uri-component 0.2.2`. No existe todavía un reemplazo automático compatible con SDK 57; la app limita y valida los deep links nativos antes de entregarlos al router. Consulta la [evaluación, mitigación y criterio de reevaluación](docs/dependency-security.md).
+
+No ejecutes `npm audit fix --force`: npm propone una versión de Expo Router perteneciente a otra matriz y no demuestra compatibilidad con SDK 57. La alerta residual se mantiene separada del control de calidad del workflow.
 
 ## Dependencias principales
 
@@ -87,7 +89,7 @@ No ejecutes `npm audit fix --force`: puede proponer una matriz de React Native i
 
 No se ha añadido backend: el proveedor actual no requiere claves y el procesamiento cabe de forma segura en el cliente. Tampoco se ha elegido licencia para el código del proyecto.
 
-El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. Son dependencias transitivas de las herramientas Expo 57; se validan con Expo Doctor y un bundle Android. Las alertas restantes de `npm audit --omit=dev` se investigan por separado para no introducir una actualización incompatible con SDK 57.
+El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. Son dependencias transitivas de las herramientas Expo 57; se validan con Expo Doctor y un bundle Android. La alerta residual de `decode-uri-component` queda documentada y mitigada sin forzar una actualización incompatible con SDK 57.
 
 ## Documentación
 
@@ -96,5 +98,6 @@ El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. So
 - [IPA y pronunciación](docs/ipa.md)
 - [Aspectos legales y licencias](docs/legal-and-licenses.md)
 - [Validación de SQLite en Android](docs/android-storage-validation.md)
+- [Auditoría de seguridad de dependencias](docs/dependency-security.md)
 - [Contribución](CONTRIBUTING.md)
 - [Decisión vigente sobre Expo SDK 57](docs/decisions/0003-upgrade-expo-sdk-57.md)
