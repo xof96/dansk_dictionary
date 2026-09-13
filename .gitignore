@@ -38,6 +38,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# test output
+coverage/
+
 # Codex local attachments
 .codex-remote-attachments/
 

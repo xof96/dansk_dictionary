@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { DictionaryEntry, EntryKind } from '@/domain/models/dictionary';
 import { DictionaryError } from '@/domain/models/errors';
 
-const DATABASE_VERSION = 2;
+export const DATABASE_VERSION = 2;
 
 interface TableInfoRow {
   name: string;
@@ -151,12 +151,13 @@ async function migrateTableToVersion2(
 export async function migrateDatabase(db: SQLiteDatabase): Promise<void> {
   const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   const currentVersion = result?.user_version ?? 0;
-  if (currentVersion >= DATABASE_VERSION) return;
 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
   `);
+
+  if (currentVersion >= DATABASE_VERSION) return;
 
   await db.withTransactionAsync(async () => {
     if (currentVersion < 1) {
@@ -205,10 +206,17 @@ export async function getStoredEntry(
   query: string,
   now = new Date(),
 ): Promise<StoredEntryResult | undefined> {
-  const row = await db.getFirstAsync<{ entry_json: string; expires_at: string }>(
-    'SELECT entry_json, expires_at FROM entry_cache WHERE query = ?',
-    query,
-  );
+  let row: { entry_json: string; expires_at: string } | null;
+  try {
+    row = await db.getFirstAsync<{ entry_json: string; expires_at: string }>(
+      'SELECT entry_json, expires_at FROM entry_cache WHERE query = ?',
+      query,
+    );
+  } catch (error: unknown) {
+    throw new DictionaryError('STORAGE', 'No se pudo leer la entrada guardada.', false, {
+      cause: error,
+    });
+  }
   if (!row) return undefined;
 
   try {
@@ -219,10 +227,8 @@ export async function getStoredEntry(
       entry: parsed.data as unknown as DictionaryEntry,
       isStale: new Date(row.expires_at).getTime() <= now.getTime(),
     };
-  } catch (error: unknown) {
-    throw new DictionaryError('STORAGE', 'No se pudo leer la entrada guardada.', false, {
-      cause: error,
-    });
+  } catch {
+    return undefined;
   }
 }
 

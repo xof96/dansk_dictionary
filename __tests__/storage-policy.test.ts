@@ -1,12 +1,17 @@
 import { SQLiteDatabase } from 'expo-sqlite';
 
 import { selectPreferredFact } from '@/domain/services/dictionary-policy';
+import { DictionaryError } from '@/domain/models/errors';
 import { normalizeWiktionaryPage } from '@/infrastructure/providers/wiktionary/wiktionary-normalizer';
 import {
   addFavorite,
+  DATABASE_VERSION,
   getStoredEntry,
   migrateDatabase,
   recordHistory,
+  removeFavorite,
+  removeHistory,
+  saveEntry,
 } from '@/infrastructure/storage/database';
 
 import { HEDDE_PAGE, HEDDER_PAGE } from './fixtures/wiktionary-pages';
@@ -18,6 +23,58 @@ function tableInfo(names: readonly string[]) {
 }
 
 describe('migraciones SQLite', () => {
+  it('crea el esquema vigente desde una instalación limpia', async () => {
+    const execAsync = jest.fn().mockResolvedValue(undefined);
+    const withTransactionAsync = jest.fn(async (task: () => Promise<void>) => task());
+    const database = {
+      getFirstAsync: jest.fn().mockResolvedValue({ user_version: 0 }),
+      getAllAsync: jest
+        .fn()
+        .mockResolvedValueOnce(
+          tableInfo([
+            'query',
+            'entry_json',
+            'fetched_at',
+            'expires_at',
+            'provider',
+            'source_revision',
+            'schema_version',
+          ]),
+        )
+        .mockResolvedValueOnce(tableInfo(['query', 'display_term', 'entry_kind', 'searched_at']))
+        .mockResolvedValueOnce(
+          tableInfo(['query', 'display_term', 'entry_kind', 'added_at', 'snapshot_json']),
+        ),
+      execAsync,
+      withTransactionAsync,
+    } as unknown as SQLiteDatabase;
+
+    await migrateDatabase(database);
+
+    const executedSql = execAsync.mock.calls.flat().join('\n');
+    expect(executedSql).toContain('CREATE TABLE IF NOT EXISTS entry_cache');
+    expect(executedSql).toContain('CREATE TABLE IF NOT EXISTS history');
+    expect(executedSql).toContain('CREATE TABLE IF NOT EXISTS favorites');
+    expect(executedSql).toContain(`PRAGMA user_version = ${DATABASE_VERSION}`);
+    expect(withTransactionAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('mantiene los pragmas de conexión y no repite una migración sobre v2', async () => {
+    const execAsync = jest.fn().mockResolvedValue(undefined);
+    const withTransactionAsync = jest.fn();
+    const database = {
+      getFirstAsync: jest.fn().mockResolvedValue({ user_version: DATABASE_VERSION }),
+      execAsync,
+      withTransactionAsync,
+    } as unknown as SQLiteDatabase;
+
+    await migrateDatabase(database);
+
+    expect(execAsync).toHaveBeenCalledTimes(1);
+    expect(execAsync.mock.calls[0]?.[0]).toContain('PRAGMA foreign_keys = ON');
+    expect(withTransactionAsync).not.toHaveBeenCalled();
+  });
+
   it('migra la clave term de una base v1 a query sin borrar datos', async () => {
     const execAsync = jest.fn().mockResolvedValue(undefined);
     const withTransactionAsync = jest.fn(async (task: () => Promise<void>) => task());
@@ -78,6 +135,22 @@ describe('migraciones SQLite', () => {
 });
 
 describe('persistencia exacta y caché', () => {
+  it('marca como vigente una entrada cuya expiración aún no pasó', async () => {
+    const entry = normalizeWiktionaryPage(HEDDER_PAGE, 'hedder', NOW);
+    expect(entry).toBeDefined();
+    const database = {
+      getFirstAsync: jest.fn().mockResolvedValue({
+        entry_json: JSON.stringify(entry),
+        expires_at: '2026-08-03T00:00:00.000Z',
+      }),
+    } as unknown as SQLiteDatabase;
+
+    const stored = await getStoredEntry(database, 'hedder', NOW);
+
+    expect(stored?.entry.queriedForm).toBe('hedder');
+    expect(stored?.isStale).toBe(false);
+  });
+
   it('marca como obsoleta una entrada cuya expiración ya pasó', async () => {
     const entry = normalizeWiktionaryPage(HEDDER_PAGE, 'hedder', NOW);
     expect(entry).toBeDefined();
@@ -105,7 +178,37 @@ describe('persistencia exacta y caché', () => {
     await expect(getStoredEntry(database, 'hedder', NOW)).resolves.toBeUndefined();
   });
 
-  it('usa claves diferentes para hedde y hedder en historial y favoritos', async () => {
+  it('trata JSON malformado como caché inválida recuperable', async () => {
+    const database = {
+      getFirstAsync: jest.fn().mockResolvedValue({
+        entry_json: '{contenido-incompleto',
+        expires_at: '2099-01-01T00:00:00.000Z',
+      }),
+    } as unknown as SQLiteDatabase;
+
+    await expect(getStoredEntry(database, 'hedder', NOW)).resolves.toBeUndefined();
+  });
+
+  it('devuelve ausencia cuando no existe una fila de caché', async () => {
+    const database = {
+      getFirstAsync: jest.fn().mockResolvedValue(null),
+    } as unknown as SQLiteDatabase;
+
+    await expect(getStoredEntry(database, 'ukendt', NOW)).resolves.toBeUndefined();
+  });
+
+  it('tipa como almacenamiento un fallo real al consultar SQLite', async () => {
+    const cause = new Error('database is locked');
+    const database = {
+      getFirstAsync: jest.fn().mockRejectedValue(cause),
+    } as unknown as SQLiteDatabase;
+
+    await expect(getStoredEntry(database, 'hedder', NOW)).rejects.toMatchObject<
+      Partial<DictionaryError>
+    >({ code: 'STORAGE', retryable: false, cause });
+  });
+
+  it('usa claves diferentes para hedde y hedder en caché, historial y favoritos', async () => {
     const hedde = normalizeWiktionaryPage(HEDDE_PAGE, 'hedde', NOW);
     const hedder = normalizeWiktionaryPage(HEDDER_PAGE, 'hedder', NOW);
     expect(hedde).toBeDefined();
@@ -113,13 +216,27 @@ describe('persistencia exacta y caché', () => {
     const runAsync = jest.fn().mockResolvedValue({});
     const database = { runAsync } as unknown as SQLiteDatabase;
 
+    await saveEntry(database, hedde!);
+    await saveEntry(database, hedder!);
     await recordHistory(database, hedde!);
     await recordHistory(database, hedder!);
     await addFavorite(database, hedde!);
     await addFavorite(database, hedder!);
 
     const exactKeys = runAsync.mock.calls.map((call: unknown[]) => call[1]);
-    expect(exactKeys).toEqual(['hedde', 'hedder', 'hedde', 'hedder']);
+    expect(exactKeys).toEqual(['hedde', 'hedder', 'hedde', 'hedder', 'hedde', 'hedder']);
+  });
+
+  it('elimina una sola clave mediante SQL parametrizado', async () => {
+    const query = "hedde'); DROP TABLE favorites; --";
+    const runAsync = jest.fn().mockResolvedValue({});
+    const database = { runAsync } as unknown as SQLiteDatabase;
+
+    await removeHistory(database, query);
+    await removeFavorite(database, query);
+
+    expect(runAsync).toHaveBeenNthCalledWith(1, 'DELETE FROM history WHERE query = ?', query);
+    expect(runAsync).toHaveBeenNthCalledWith(2, 'DELETE FROM favorites WHERE query = ?', query);
   });
 });
 

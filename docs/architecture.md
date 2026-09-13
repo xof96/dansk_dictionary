@@ -142,11 +142,16 @@ Los tests Jest no acceden a internet. `__tests__/fixtures/wiktionary-pages.ts` c
 - navegación bidireccional mediante rutas exactas;
 - múltiples acepciones, categorías y pronunciaciones;
 - página sin sección danesa;
-- caché obsoleta y caché inválida;
-- claves separadas para historial/favoritos;
+- caché vigente, obsoleta, ausente y malformada;
+- claves separadas para caché, historial y favoritos;
+- instalación limpia, migración v1→v2 y reapertura a nivel de política;
+- carga online, recuperación desde caché y ausencia offline accionable;
+- borrado selectivo mediante SQL parametrizado;
 - registro de conflictos.
 
-SQLite nativo y TTS requieren pruebas de integración en Android para cubrir el motor del dispositivo; Jest cubre los contratos y las políticas puras.
+Jest cubre contratos y políticas puras con dobles de `SQLiteDatabase`. El diagnóstico opt-in de
+`docs/android-storage-validation.md` usa bases temporales para comprobar SQLite nativo en Android:
+creación, reapertura, CRUD por clave, migración con datos y respaldo de esquemas incompatibles.
 
 ## Decisiones principales
 
@@ -205,8 +210,8 @@ contenido anterior.
 - No hay traducción automática ni búsqueda inversa.
 - No hay audio humano integrado; la disponibilidad y licencia deben evaluarse archivo por archivo.
 - No se interpreta todavía etimología compleja ni tablas expandidas por plantillas.
-- No se ha ejecutado en un teléfono físico desde este entorno; sí se verificaron Metro, export Android y Expo Doctor.
-- Falta ampliar pruebas instrumentadas de SQLite/TTS en Android.
+- La matriz de dispositivos sigue siendo acotada: TTS se validó en un Xiaomi 14T Pro y SQLite/TTS
+  en un AVD Android 16. Conviene repetir el protocolo al cambiar Expo, Android o el esquema.
 
 ## Tabla de archivos esenciales
 
@@ -219,7 +224,8 @@ contenido anterior.
 | `src/domain/models/dictionary.ts`                                  | lenguaje ubicuo               | normalizadores, DB, UI, tests | se añada una capacidad lingüística            |
 | `src/domain/repositories/dictionary-repository.ts`                 | puerto de consulta            | proveedor                     | cambie el contrato independiente de proveedor |
 | `src/domain/services/dictionary-policy.ts`                         | normalización/prioridad       | búsqueda y agregación         | cambie deduplicación o conflictos             |
-| `src/features/dictionary/hooks/use-dictionary-entry.ts`            | orquesta Query, red y caché   | ruta de entrada               | cambie la política online/offline             |
+| `src/features/dictionary/hooks/use-dictionary-entry.ts`            | adapta TanStack Query         | ruta de entrada               | cambie la integración React/Query             |
+| `src/features/dictionary/services/load-dictionary-entry.ts`        | decide entre red y caché      | hook y tests                  | cambie la política online/offline             |
 | `src/features/dictionary/components/entry-detail.tsx`              | presenta el dominio           | ruta de entrada               | cambie jerarquía visual o accesibilidad       |
 | `src/infrastructure/api/http-client.ts`                            | HTTP seguro validado          | proveedores                   | cambien timeout, headers o errores            |
 | `src/infrastructure/providers/wiktionary/wiktionary-schema.ts`     | valida DTO externo            | repositorio Wiktionary        | cambie la API de MediaWiki                    |
@@ -227,6 +233,7 @@ contenido anterior.
 | `src/infrastructure/providers/wiktionary/editorial-content.ts`     | traducciones/ejemplos propios | normalizador                  | se revise contenido pedagógico                |
 | `src/infrastructure/providers/wiktionary/wiktionary-repository.ts` | integración API y sugerencias | hook de consulta              | cambie endpoint/proveedor                     |
 | `src/infrastructure/storage/database.ts`                           | esquema, migración y CRUD     | hooks y providers             | cambie persistencia o versión de esquema      |
+| `src/infrastructure/storage/database-diagnostics.ts`               | prueba SQLite nativo aislado  | diagnóstico opt-in            | cambie el esquema o su protocolo Android      |
 | `src/providers/app-providers.tsx`                                  | Query, SQLite, red y foco     | layout raíz                   | cambie configuración global                   |
 | `__tests__/fixtures/wiktionary-pages.ts`                           | respuestas reales recortadas  | tests de proveedor            | se añada un patrón real nuevo                 |
 | `docs/data-sources.md`                                             | disponibilidad/licencia       | mantenimiento legal           | se integre o descarte una fuente              |
