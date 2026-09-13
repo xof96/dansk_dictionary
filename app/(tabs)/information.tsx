@@ -26,8 +26,12 @@ function InformationCard({
   return (
     <Card>
       <View style={styles.cardHeading}>
-        <View style={[styles.cardIcon, { backgroundColor: iconBackground }]}>
-          <Ionicons name={icon} size={22} color={iconColor} />
+        <View
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+          style={[styles.cardIcon, { backgroundColor: iconBackground }]}
+        >
+          <Ionicons accessible={false} name={icon} size={22} color={iconColor} />
         </View>
         <AppText variant="heading" style={styles.headingText}>
           {title}

@@ -64,27 +64,34 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Volver"
+            accessibilityHint="Vuelve a la pantalla anterior"
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.heroButton,
-              { backgroundColor: colors.surface, borderColor: colors.border },
+              { backgroundColor: colors.surface, borderColor: colors.muted },
               pressed && styles.pressed,
             ]}
           >
-            <Ionicons name="arrow-back" size={21} color={colors.text} />
+            <Ionicons accessible={false} name="arrow-back" size={21} color={colors.text} />
           </Pressable>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={favorite.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+            accessibilityState={{
+              disabled: favorite.isUpdating,
+              selected: favorite.isFavorite,
+              busy: favorite.isUpdating,
+            }}
             disabled={favorite.isUpdating}
             onPress={() => void favorite.toggle()}
             style={({ pressed }) => [
               styles.heroButton,
-              { backgroundColor: colors.surface, borderColor: colors.border },
+              { backgroundColor: colors.surface, borderColor: colors.muted },
               pressed && styles.pressed,
             ]}
           >
             <Ionicons
+              accessible={false}
               name={favorite.isFavorite ? 'heart' : 'heart-outline'}
               size={25}
               color={favorite.isFavorite ? colors.danger : colors.text}
@@ -113,6 +120,12 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
         </View>
       </LinearGradient>
 
+      {favorite.error ? (
+        <AppText variant="caption" accessibilityRole="alert" accessibilityLiveRegion="assertive">
+          {favorite.error} Pulsa de nuevo para reintentar.
+        </AppText>
+      ) : null}
+
       {entry.cacheState === 'stale-cache' ? (
         <Card style={{ borderColor: colors.warning }}>
           <AppText variant="heading">Copia guardada sin conexión</AppText>
@@ -135,6 +148,7 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
               accessibilityRole="link"
               accessibilityLabel={`Abrir el lema ${relation.lemma}`}
               onPress={() => openEntry(relation.lemma)}
+              style={styles.inlineLink}
             >
               <AppText style={{ color: colors.accent, fontFamily: typography.bold }}>
                 {relation.lemma}
@@ -216,7 +230,7 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
                     onPress={() => openEntry(inflection.form)}
                     style={({ pressed }) => [
                       styles.inflection,
-                      { borderColor: colors.border, backgroundColor: colors.primarySoft },
+                      { borderColor: colors.muted, backgroundColor: colors.primarySoft },
                       pressed && styles.pressed,
                     ]}
                   >
@@ -268,6 +282,7 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
               <ActionButton
                 label="Abrir fuente"
                 kind="secondary"
+                accessibilityHint="Abre la página de origen en el navegador"
                 onPress={() => void Linking.openURL(attribution.sourceUrl)}
               />
             ) : null}
@@ -283,8 +298,8 @@ const styles = StyleSheet.create({
   wordHero: { borderRadius: 27, borderWidth: 1, padding: 20, gap: 24, overflow: 'hidden' },
   heroToolbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   heroButton: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',
@@ -298,12 +313,20 @@ const styles = StyleSheet.create({
   },
   flex: { flex: 1 },
   inlineWrap: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+  inlineLink: { minHeight: 48, justifyContent: 'center' },
   itemGroup: { gap: 7 },
   ipa: { fontFamily: typography.semibold, fontSize: 25, lineHeight: 32 },
   sense: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12, gap: 8 },
   translationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   inflections: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  inflection: { borderWidth: 1, borderRadius: 10, padding: 12, minWidth: 120, gap: 2 },
+  inflection: {
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    minWidth: 120,
+    gap: 2,
+  },
   pressed: { opacity: 0.65 },
   example: { fontFamily: typography.semibold, fontSize: 21, lineHeight: 29 },
   audioRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },

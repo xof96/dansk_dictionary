@@ -80,7 +80,9 @@ describe('barra de navegación inferior', () => {
     expect(screen.getByRole('tab', { name: 'Historial' }).props.accessibilityState).toEqual({
       selected: true,
     });
-    expect(screen.getByRole('tab', { name: 'Favoritos' }).props.accessibilityState).toEqual({});
+    expect(screen.getByRole('tab', { name: 'Favoritos' }).props.accessibilityState).toEqual({
+      selected: false,
+    });
     expect(screen.getByTestId('tab-history')).toHaveStyle({ backgroundColor: '#171717' });
   });
 
@@ -140,5 +142,6 @@ describe('barra de navegación inferior', () => {
       paddingVertical: 7,
     });
     expect(screen.getByText('Buscar')).toHaveStyle({ fontFamily: 'Inter_500Medium' });
+    expect(screen.getByText('Buscar')).toHaveProp('maxFontSizeMultiplier', 2);
   });
 });

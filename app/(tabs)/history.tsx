@@ -7,6 +7,7 @@ import {
   ActionButton,
   Card,
   EmptyState,
+  ErrorState,
   GradientHeader,
   LoadingState,
   PageScroll,
@@ -31,8 +32,12 @@ export default function HistoryScreen() {
         title="Historial"
         description="Vuelve a cualquier forma que hayas consultado, incluso cuando no tengas conexión."
         action={
-          <View style={[styles.iconTile, { backgroundColor: colors.surface }]}>
-            <Ionicons name="time" size={27} color={colors.accent} />
+          <View
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.iconTile, { backgroundColor: colors.surface }]}
+          >
+            <Ionicons accessible={false} name="time" size={27} color={colors.accent} />
           </View>
         }
       >
@@ -44,6 +49,12 @@ export default function HistoryScreen() {
       </GradientHeader>
       {history.loading ? (
         <LoadingState label="Cargando historial…" />
+      ) : history.error ? (
+        <ErrorState
+          title="No se pudo cargar el historial"
+          message={history.error}
+          onRetry={() => void history.refresh()}
+        />
       ) : history.items.length === 0 ? (
         <EmptyState
           title="Historial vacío"

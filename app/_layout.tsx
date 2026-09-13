@@ -38,7 +38,12 @@ export default function RootLayout() {
   if (!fontsLoaded && !fontError) {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator
+          accessibilityRole="progressbar"
+          accessibilityLabel="Cargando aplicación"
+          size="large"
+          color={colors.accent}
+        />
       </View>
     );
   }

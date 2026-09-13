@@ -79,7 +79,7 @@ export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
               key={route.key}
               testID={`tab-${route.name}`}
               accessibilityRole="tab"
-              accessibilityState={focused ? { selected: true } : {}}
+              accessibilityState={{ selected: focused }}
               accessibilityLabel={options.tabBarAccessibilityLabel ?? label}
               onLongPress={onLongPress}
               onPress={onPress}
@@ -90,11 +90,16 @@ export function AppTabBar({ state, descriptors, navigation }: AppTabBarProps) {
               ]}
             >
               <Ionicons
+                accessible={false}
                 name={focused ? icons.active : icons.inactive}
                 color={foregroundColor}
                 size={21}
               />
-              <Text numberOfLines={1} style={[styles.tabLabel, { color: foregroundColor }]}>
+              <Text
+                maxFontSizeMultiplier={2}
+                numberOfLines={2}
+                style={[styles.tabLabel, { color: foregroundColor }]}
+              >
                 {label}
               </Text>
             </Pressable>
@@ -132,6 +137,8 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     lineHeight: 13,
     letterSpacing: -0.15,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
 });

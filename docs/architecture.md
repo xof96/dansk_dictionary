@@ -150,12 +150,15 @@ Los tests Jest no acceden a internet. `__tests__/fixtures/wiktionary-pages.ts` c
 - instalación limpia, migración v1→v2 y reapertura a nivel de política;
 - carga online, recuperación desde caché y ausencia offline accionable;
 - deep links nativos válidos, malformados y sobredimensionados;
+- semántica, áreas táctiles y contraste de los componentes compartidos;
 - borrado selectivo mediante SQL parametrizado;
 - registro de conflictos.
 
 Jest cubre contratos y políticas puras con dobles de `SQLiteDatabase`. El diagnóstico opt-in de
 `docs/android-storage-validation.md` usa bases temporales para comprobar SQLite nativo en Android:
 creación, reapertura, CRUD por clave, migración con datos y respaldo de esquemas incompatibles.
+La checklist de `docs/android-accessibility-validation.md` completa lo automatizable con TalkBack,
+texto al 200 %, temas y estados reales en Android.
 
 ## Decisiones principales
 
@@ -244,3 +247,4 @@ contenido anterior.
 | `src/providers/app-providers.tsx`                                  | Query, SQLite, red y foco     | layout raíz                   | cambie configuración global                   |
 | `__tests__/fixtures/wiktionary-pages.ts`                           | respuestas reales recortadas  | tests de proveedor            | se añada un patrón real nuevo                 |
 | `docs/data-sources.md`                                             | disponibilidad/licencia       | mantenimiento legal           | se integre o descarte una fuente              |
+| `docs/android-accessibility-validation.md`                         | protocolo accesible Android   | QA manual de pantallas        | cambie navegación, estados o componentes      |
