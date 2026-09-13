@@ -11,7 +11,7 @@ export const palette = {
     background: '#F7F9FF',
     surface: '#FFFFFF',
     text: '#171717',
-    muted: '#667085',
+    muted: '#5F6877',
     primary: '#171717',
     primaryForeground: '#FFFFFF',
     primarySoft: '#E8F0FE',

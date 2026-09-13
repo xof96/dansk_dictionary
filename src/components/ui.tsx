@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { PropsWithChildren, ReactNode } from 'react';
 import {
+  type AccessibilityState,
   ActivityIndicator,
   Pressable,
   ScrollView,
@@ -55,10 +56,13 @@ export function AppText({
   }
 >) {
   const colors = useAppTheme();
+  const accessibilityRole =
+    textProps.accessibilityRole ??
+    (variant === 'display' || variant === 'title' || variant === 'heading' ? 'header' : undefined);
   return (
     <Text
-      maxFontSizeMultiplier={1.8}
       {...textProps}
+      accessibilityRole={accessibilityRole}
       style={[
         styles[variant],
         { color: variant === 'caption' ? colors.muted : colors.text },
@@ -128,6 +132,7 @@ export function ActionButton({
   kind = 'primary',
   compact = false,
   accessibilityHint,
+  accessibilityState,
 }: {
   label: string;
   onPress: () => void;
@@ -136,6 +141,7 @@ export function ActionButton({
   kind?: 'primary' | 'secondary' | 'danger';
   compact?: boolean;
   accessibilityHint?: string;
+  accessibilityState?: AccessibilityState;
 }) {
   const colors = useAppTheme();
   const backgroundColor = kind === 'primary' ? colors.primary : colors.surface;
@@ -146,6 +152,7 @@ export function ActionButton({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
+      accessibilityState={{ ...accessibilityState, disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
@@ -153,14 +160,18 @@ export function ActionButton({
         compact && styles.compactButton,
         {
           backgroundColor,
-          borderColor: kind === 'primary' ? colors.primary : colors.border,
+          borderColor: kind === 'primary' ? colors.primary : colors.muted,
           shadowColor: colors.shadow,
         },
         pressed && styles.pressed,
         disabled && styles.disabled,
       ]}
     >
-      {icon}
+      {icon ? (
+        <View accessible={false} importantForAccessibility="no-hide-descendants">
+          {icon}
+        </View>
+      ) : null}
       <Text style={[styles.buttonText, { color: foregroundColor }]}>{label}</Text>
     </Pressable>
   );
@@ -192,6 +203,8 @@ export function DenmarkFlag() {
   const colors = useAppTheme();
   return (
     <View
+      accessible
+      accessibilityRole="image"
       accessibilityLabel="Bandera de Dinamarca"
       style={[styles.flag, { borderColor: colors.surface, shadowColor: colors.shadow }]}
     >
@@ -233,7 +246,7 @@ export function GradientHeader({
         {action}
       </View>
       {description ? (
-        <AppText style={[styles.headerDescription, { color: colors.muted }]}>{description}</AppText>
+        <AppText style={[styles.headerDescription, { color: colors.text }]}>{description}</AppText>
       ) : null}
       {children}
     </LinearGradient>
@@ -243,7 +256,9 @@ export function GradientHeader({
 export function SectionHeading({ title, action }: { title: string; action?: ReactNode }) {
   return (
     <View style={styles.sectionHeading}>
-      <AppText variant="heading">{title}</AppText>
+      <AppText variant="heading" style={styles.sectionHeadingTitle}>
+        {title}
+      </AppText>
       {action}
     </View>
   );
@@ -253,7 +268,12 @@ export function LoadingState({ label = 'Consultando fuentes…' }: { label?: str
   const colors = useAppTheme();
   return (
     <Card>
-      <View accessibilityRole="progressbar" accessibilityLabel={label} style={styles.centerState}>
+      <View
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel={label}
+        style={styles.centerState}
+      >
         <View style={[styles.loadingOrb, { backgroundColor: colors.accentSoft }]}>
           <ActivityIndicator size="large" color={colors.accent} />
         </View>
@@ -272,6 +292,26 @@ export function EmptyState({ title, message }: { title: string; message: string 
       <AppText variant="caption" style={styles.centerText}>
         {message}
       </AppText>
+    </Card>
+  );
+}
+
+export function ErrorState({
+  title,
+  message,
+  onRetry,
+}: {
+  title: string;
+  message: string;
+  onRetry: () => void;
+}) {
+  return (
+    <Card>
+      <AppText variant="heading" accessibilityRole="alert" accessibilityLiveRegion="assertive">
+        {title}
+      </AppText>
+      <AppText>{message}</AppText>
+      <ActionButton label="Reintentar" onPress={onRetry} />
     </Card>
   );
 }
@@ -309,7 +349,7 @@ const styles = StyleSheet.create({
   },
   pillText: { fontFamily: typography.medium, lineHeight: 17 },
   button: {
-    minHeight: 46,
+    minHeight: 48,
     borderRadius: 9,
     paddingHorizontal: 16,
     paddingVertical: 11,
@@ -323,10 +363,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 1,
   },
-  compactButton: { minHeight: 42, paddingHorizontal: 13, paddingVertical: 8 },
+  compactButton: { minHeight: 48, paddingHorizontal: 13, paddingVertical: 8 },
   buttonText: { fontFamily: typography.semibold, fontSize: 15, lineHeight: 20 },
   suggestion: {
-    minHeight: 46,
+    minHeight: 48,
     minWidth: 74,
     paddingHorizontal: 17,
     paddingVertical: 10,
@@ -392,12 +432,13 @@ const styles = StyleSheet.create({
   },
   headerDescription: { maxWidth: 520 },
   sectionHeading: {
-    minHeight: 44,
+    minHeight: 48,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
   },
+  sectionHeadingTitle: { flex: 1 },
   centerState: { alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 30 },
   centerText: { textAlign: 'center', maxWidth: 320 },
   loadingOrb: {

@@ -98,6 +98,7 @@ El lockfile aplica overrides de seguridad a `postcss 8.5.25` y `uuid 11.1.1`. So
 - [IPA y pronunciación](docs/ipa.md)
 - [Aspectos legales y licencias](docs/legal-and-licenses.md)
 - [Validación de SQLite en Android](docs/android-storage-validation.md)
+- [Validación de accesibilidad y estados en Android](docs/android-accessibility-validation.md)
 - [Auditoría de seguridad de dependencias](docs/dependency-security.md)
 - [Contribución](CONTRIBUTING.md)
 - [Decisión vigente sobre Expo SDK 57](docs/decisions/0003-upgrade-expo-sdk-57.md)

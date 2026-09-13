@@ -9,7 +9,9 @@ import {
   Card,
   DenmarkFlag,
   EmptyState,
+  ErrorState,
   GradientHeader,
+  LoadingState,
   PageScroll,
   SectionHeading,
   SuggestionButton,
@@ -44,13 +46,11 @@ export default function SearchScreen() {
         action={<DenmarkFlag />}
       >
         <View
-          style={[
-            styles.searchBox,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
+          style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.muted }]}
         >
-          <Ionicons name="search-outline" size={21} color={colors.muted} />
+          <Ionicons accessible={false} name="search-outline" size={21} color={colors.muted} />
           <TextInput
+            accessibilityRole="search"
             accessibilityLabel="Palabra danesa"
             accessibilityHint="Admite las letras æ, ø y å"
             autoCapitalize="none"
@@ -67,6 +67,7 @@ export default function SearchScreen() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Buscar"
+            accessibilityState={{ disabled: !term.trim() }}
             disabled={!term.trim()}
             onPress={submit}
             style={({ pressed }) => [
@@ -76,12 +77,17 @@ export default function SearchScreen() {
               !term.trim() && styles.disabled,
             ]}
           >
-            <Ionicons name="arrow-forward" size={21} color={colors.primaryForeground} />
+            <Ionicons
+              accessible={false}
+              name="arrow-forward"
+              size={21}
+              color={colors.primaryForeground}
+            />
           </Pressable>
         </View>
         <View style={styles.exactNote}>
-          <Ionicons name="git-branch-outline" size={18} color={colors.accent} />
-          <AppText variant="caption" style={[styles.exactText, { color: colors.muted }]}>
+          <Ionicons accessible={false} name="git-branch-outline" size={18} color={colors.accent} />
+          <AppText variant="caption" style={[styles.exactText, { color: colors.text }]}>
             Cada forma conserva su propia entrada: hedder no se sustituye por hedde.
           </AppText>
         </View>
@@ -109,15 +115,24 @@ export default function SearchScreen() {
       <SectionHeading
         title="Recientes"
         action={
-          <Pressable accessibilityRole="link" onPress={() => router.push('/history')}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="Ver todo el historial"
+            onPress={() => router.push('/history')}
+            style={styles.viewAllLink}
+          >
             <AppText style={[styles.link, { color: colors.accent }]}>Ver todo</AppText>
           </Pressable>
         }
       />
       {history.loading ? (
-        <Card>
-          <AppText variant="caption">Cargando historial…</AppText>
-        </Card>
+        <LoadingState label="Cargando historial…" />
+      ) : history.error ? (
+        <ErrorState
+          title="No se pudo cargar el historial"
+          message={history.error}
+          onRetry={() => void history.refresh()}
+        />
       ) : history.items.length === 0 ? (
         <EmptyState
           title="Aún no hay búsquedas"
@@ -150,10 +165,10 @@ const styles = StyleSheet.create({
     paddingLeft: 13,
     gap: 8,
   },
-  input: { flex: 1, minHeight: 46, fontFamily: typography.regular, fontSize: 17 },
+  input: { flex: 1, minHeight: 48, fontFamily: typography.regular, fontSize: 17 },
   searchButton: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 9,
@@ -164,6 +179,7 @@ const styles = StyleSheet.create({
   spark: { width: 11, height: 11, borderRadius: 3, transform: [{ rotate: '15deg' }] },
   quickTerms: { flexDirection: 'row', gap: 12, flexWrap: 'wrap', paddingVertical: 4 },
   link: { fontFamily: typography.semibold, fontSize: 15 },
+  viewAllLink: { minHeight: 48, justifyContent: 'center' },
   listCard: { paddingTop: 2, paddingBottom: 2 },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.4 },

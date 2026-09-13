@@ -33,16 +33,19 @@ export function StoredEntryRow({
         </View>
         <AppText variant="caption">{subtitle}</AppText>
       </Pressable>
-      {!onRemove ? <Ionicons name="chevron-forward" size={20} color={colors.muted} /> : null}
+      {!onRemove ? (
+        <Ionicons accessible={false} name="chevron-forward" size={20} color={colors.muted} />
+      ) : null}
       {onRemove ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Eliminar ${term}`}
+          accessibilityHint="Elimina esta entrada de la lista"
           hitSlop={10}
           onPress={onRemove}
           style={styles.remove}
         >
-          <Ionicons name="trash-outline" size={22} color={colors.danger} />
+          <Ionicons accessible={false} name="trash-outline" size={22} color={colors.danger} />
         </Pressable>
       ) : null}
     </View>

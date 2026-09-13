@@ -21,14 +21,15 @@ function BackButton() {
     <Pressable
       accessibilityRole="button"
       accessibilityLabel="Volver"
+      accessibilityHint="Vuelve a la pantalla anterior"
       onPress={() => router.back()}
       style={({ pressed }) => [
         styles.backButton,
-        { backgroundColor: colors.surface, borderColor: colors.border },
+        { backgroundColor: colors.surface, borderColor: colors.muted },
         pressed && styles.pressed,
       ]}
     >
-      <Ionicons name="arrow-back" size={21} color={colors.text} />
+      <Ionicons accessible={false} name="arrow-back" size={21} color={colors.text} />
     </Pressable>
   );
 }
@@ -60,7 +61,9 @@ export default function EntryScreen() {
           action={<BackButton />}
         />
         <Card>
-          <AppText variant="heading">No se pudo completar la consulta</AppText>
+          <AppText variant="heading" accessibilityRole="alert" accessibilityLiveRegion="assertive">
+            No se pudo completar la consulta
+          </AppText>
           <AppText>
             {query.error instanceof Error ? query.error.message : 'Error desconocido.'}
           </AppText>
@@ -116,8 +119,8 @@ export default function EntryScreen() {
 
 const styles = StyleSheet.create({
   backButton: {
-    width: 46,
-    height: 46,
+    width: 48,
+    height: 48,
     borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',

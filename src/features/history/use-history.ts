@@ -13,11 +13,15 @@ export function useHistory(limit = 30) {
   const database = useSQLiteContext();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>();
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setError(undefined);
     try {
       setItems(await listHistory(database, limit));
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : 'No se pudo leer el historial.');
     } finally {
       setLoading(false);
     }
@@ -31,16 +35,26 @@ export function useHistory(limit = 30) {
 
   const remove = useCallback(
     async (query: string) => {
-      await removeHistory(database, query);
-      await refresh();
+      setError(undefined);
+      try {
+        await removeHistory(database, query);
+        await refresh();
+      } catch (caught: unknown) {
+        setError(caught instanceof Error ? caught.message : 'No se pudo eliminar la consulta.');
+      }
     },
     [database, refresh],
   );
 
   const clear = useCallback(async () => {
-    await clearHistory(database);
-    await refresh();
+    setError(undefined);
+    try {
+      await clearHistory(database);
+      await refresh();
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : 'No se pudo borrar el historial.');
+    }
   }, [database, refresh]);
 
-  return { items, loading, refresh, remove, clear };
+  return { items, loading, error, refresh, remove, clear };
 }

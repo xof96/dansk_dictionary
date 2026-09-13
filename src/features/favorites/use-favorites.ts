@@ -8,11 +8,15 @@ export function useFavorites() {
   const database = useSQLiteContext();
   const [items, setItems] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>();
 
   const refresh = useCallback(async () => {
     setLoading(true);
+    setError(undefined);
     try {
       setItems(await listFavorites(database));
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : 'No se pudieron leer los favoritos.');
     } finally {
       setLoading(false);
     }
@@ -26,11 +30,16 @@ export function useFavorites() {
 
   const remove = useCallback(
     async (query: string) => {
-      await removeFavorite(database, query);
-      await refresh();
+      setError(undefined);
+      try {
+        await removeFavorite(database, query);
+        await refresh();
+      } catch (caught: unknown) {
+        setError(caught instanceof Error ? caught.message : 'No se pudo eliminar el favorito.');
+      }
     },
     [database, refresh],
   );
 
-  return { items, loading, remove };
+  return { items, loading, error, refresh, remove };
 }

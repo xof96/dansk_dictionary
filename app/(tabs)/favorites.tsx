@@ -3,7 +3,14 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { StoredEntryRow } from '@/components/stored-entry-row';
-import { Card, EmptyState, GradientHeader, LoadingState, PageScroll } from '@/components/ui';
+import {
+  Card,
+  EmptyState,
+  ErrorState,
+  GradientHeader,
+  LoadingState,
+  PageScroll,
+} from '@/components/ui';
 import { useFavorites } from '@/features/favorites/use-favorites';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
@@ -17,13 +24,23 @@ export default function FavoritesScreen() {
         title="Favoritos"
         description="Guarda las palabras que quieres repasar. Cada forma se conserva por separado: hedder nunca se confunde con hedde."
         action={
-          <View style={[styles.iconTile, { backgroundColor: colors.surface }]}>
-            <Ionicons name="heart" size={26} color={colors.danger} />
+          <View
+            accessible={false}
+            importantForAccessibility="no-hide-descendants"
+            style={[styles.iconTile, { backgroundColor: colors.surface }]}
+          >
+            <Ionicons accessible={false} name="heart" size={26} color={colors.danger} />
           </View>
         }
       />
       {favorites.loading ? (
         <LoadingState label="Cargando favoritos…" />
+      ) : favorites.error ? (
+        <ErrorState
+          title="No se pudieron cargar los favoritos"
+          message={favorites.error}
+          onRetry={() => void favorites.refresh()}
+        />
       ) : favorites.items.length === 0 ? (
         <EmptyState
           title="No hay favoritos"
