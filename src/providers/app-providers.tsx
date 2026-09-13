@@ -10,6 +10,34 @@ import {
 } from '@tanstack/react-query';
 
 import { migrateDatabase } from '@/infrastructure/storage/database';
+import { runStorageDiagnostics } from '@/infrastructure/storage/database-diagnostics';
+
+let storageDiagnosticsStarted = false;
+
+function StorageDiagnosticsRunner() {
+  useEffect(() => {
+    if (
+      !__DEV__ ||
+      storageDiagnosticsStarted ||
+      process.env.EXPO_PUBLIC_DD6_STORAGE_DIAGNOSTICS !== '1'
+    ) {
+      return;
+    }
+
+    storageDiagnosticsStarted = true;
+    void runStorageDiagnostics()
+      .then((report) => {
+        const marker = report.passed ? 'PASS' : 'FAIL';
+        console.info(`[DD-6][SQLite] ${marker}`, JSON.stringify(report));
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error('[DD-6][SQLite] FAIL', message);
+      });
+  }, []);
+
+  return null;
+}
 
 function QueryEnvironment() {
   useEffect(() => {
@@ -53,6 +81,7 @@ export function AppProviders({ children }: PropsWithChildren) {
     <SQLiteProvider databaseName="dansk-dictionary.db" onInit={migrateDatabase}>
       <QueryClientProvider client={queryClient}>
         <QueryEnvironment />
+        <StorageDiagnosticsRunner />
         {children}
       </QueryClientProvider>
     </SQLiteProvider>
