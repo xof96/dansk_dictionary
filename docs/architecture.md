@@ -7,6 +7,7 @@ La aplicación es mobile-first y no necesita backend en el corte actual. El prov
 ```text
 app/                              rutas y composición de pantallas
   (tabs)/                         Buscar, Favoritos, Historial, Información
+  +native-intent.ts               validación previa de deep links nativos
   entry/[term].tsx                resultado exacto para la forma de la URL
 src/
   components/                     piezas visuales reutilizables y accesibles
@@ -36,6 +37,8 @@ docs/                             arquitectura, datos, IPA, legal y decisiones
 `app/` contiene rutas de Expo Router. No interpreta wikitext ni ejecuta SQL. La búsqueda solo normaliza el texto y navega a `/entry/[term]`; la ruta dinámica decide qué estado mostrar y delega el contenido a `EntryDetail`.
 
 Expo Router convierte archivos en rutas. Esto hace que `/entry/hedder` sea una identidad observable y estable: la pantalla no cambia su parámetro por `hedde`. Los enlaces a lemas e inflexiones crean una ruta nueva con `buildEntryHref`, por lo que el botón Atrás recupera naturalmente la entrada anterior.
+
+Antes de que Expo Router interprete un deep link nativo, `+native-intent.ts` limita su longitud y valida la codificación URI. Una ruta sobredimensionada o malformada vuelve a `/`; las rutas válidas se entregan sin modificar. Esta barrera mitiga la alerta transitiva documentada en `docs/dependency-security.md` sin cambiar la matriz de SDK 57.
 
 ### Funcionalidades
 
@@ -146,6 +149,7 @@ Los tests Jest no acceden a internet. `__tests__/fixtures/wiktionary-pages.ts` c
 - claves separadas para caché, historial y favoritos;
 - instalación limpia, migración v1→v2 y reapertura a nivel de política;
 - carga online, recuperación desde caché y ausencia offline accionable;
+- deep links nativos válidos, malformados y sobredimensionados;
 - borrado selectivo mediante SQL parametrizado;
 - registro de conflictos.
 
@@ -212,12 +216,15 @@ contenido anterior.
 - No se interpreta todavía etimología compleja ni tablas expandidas por plantillas.
 - La matriz de dispositivos sigue siendo acotada: TTS se validó en un Xiaomi 14T Pro y SQLite/TTS
   en un AVD Android 16. Conviene repetir el protocolo al cambiar Expo, Android o el esquema.
+- `npm audit --omit=dev` conserva una alerta moderada transitiva representada en tres filas; la
+  exposición, mitigación y reevaluación están en `docs/dependency-security.md`.
 
 ## Tabla de archivos esenciales
 
 | Ruta                                                               | Responsabilidad               | Utilizado por                 | Modificar cuando…                             |
 | ------------------------------------------------------------------ | ----------------------------- | ----------------------------- | --------------------------------------------- |
 | `app/_layout.tsx`                                                  | Providers y Stack raíz        | toda la app                   | cambie un provider global o una ruta de Stack |
+| `app/+native-intent.ts`                                            | valida deep links nativos     | Expo Router en Android        | cambie el esquema o la política de enlaces    |
 | `app/(tabs)/_layout.tsx`                                           | navegación primaria           | cuatro tabs                   | se añada/quite una sección principal          |
 | `app/(tabs)/index.tsx`                                             | búsqueda exacta y recientes   | usuario, historial            | cambie la experiencia de búsqueda             |
 | `app/entry/[term].tsx`                                             | estados de la consulta        | hook y detalle                | cambien carga/error/sugerencias               |
