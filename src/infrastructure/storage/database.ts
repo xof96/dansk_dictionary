@@ -155,6 +155,7 @@ export async function migrateDatabase(db: SQLiteDatabase): Promise<void> {
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
+    PRAGMA secure_delete = ON;
   `);
 
   if (currentVersion >= DATABASE_VERSION) return;
@@ -273,6 +274,10 @@ export async function clearHistory(db: SQLiteDatabase): Promise<void> {
   await db.runAsync('DELETE FROM history');
 }
 
+export async function clearEntryCache(db: SQLiteDatabase): Promise<void> {
+  await db.runAsync('DELETE FROM entry_cache');
+}
+
 export async function isFavorite(db: SQLiteDatabase, query: string): Promise<boolean> {
   const row = await db.getFirstAsync<{ present: number }>(
     'SELECT 1 AS present FROM favorites WHERE query = ?',
@@ -301,6 +306,10 @@ export async function removeFavorite(db: SQLiteDatabase, query: string): Promise
   await db.runAsync('DELETE FROM favorites WHERE query = ?', query);
 }
 
+export async function clearFavorites(db: SQLiteDatabase): Promise<void> {
+  await db.runAsync('DELETE FROM favorites');
+}
+
 export async function listFavorites(db: SQLiteDatabase): Promise<FavoriteItem[]> {
   const rows = await db.getAllAsync<{
     query: string;
@@ -314,4 +323,17 @@ export async function listFavorites(db: SQLiteDatabase): Promise<FavoriteItem[]>
     entryKind: row.entry_kind,
     addedAt: row.added_at,
   }));
+}
+
+export async function clearAllLocalData(db: SQLiteDatabase): Promise<void> {
+  await db.withTransactionAsync(async () => {
+    await db.execAsync(`
+      DELETE FROM entry_cache;
+      DELETE FROM history;
+      DELETE FROM favorites;
+      DROP TABLE IF EXISTS entry_cache_legacy_v1;
+      DROP TABLE IF EXISTS history_legacy_v1;
+      DROP TABLE IF EXISTS favorites_legacy_v1;
+    `);
+  });
 }

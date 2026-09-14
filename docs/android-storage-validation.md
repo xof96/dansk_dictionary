@@ -34,12 +34,13 @@ exactas, SQL parametrizado y selección entre red y copia local.
    [DD-6][SQLite] PASS
    ```
 
-   El informe JSON debe contener cuatro comprobaciones exitosas:
+   El informe JSON debe contener cinco comprobaciones exitosas:
 
    - instalación limpia y reapertura;
    - caché, historial, favoritos y borrado por clave;
    - migración v1→v2 con filas reconocibles;
    - respaldo de una tabla incompatible.
+   - borrado completo de caché, historial, favoritos y respaldos heredados.
 
 6. Detén Metro con `Ctrl+C` y limpia la variable de la sesión:
 
@@ -65,6 +66,17 @@ valida además así:
 7. Busca una palabra nunca consultada mientras continúa el modo avión. Debe aparecer el error
    accionable de ausencia de conexión y el botón **Reintentar**, sin realizar una consulta remota.
 8. Restaura la red y pulsa **Reintentar** para confirmar la recuperación.
+9. Desde **Información → Control de datos locales**, prueba el borrado separado de historial,
+   favoritos y caché. Vuelve a crear datos entre cada comprobación.
+10. Crea nuevamente datos en las tres categorías, pulsa **Borrar todos los datos locales**, cierra
+    Expo Go y vuelve a abrirlo. Las listas deben estar vacías y una consulta offline no debe
+    recuperar la entrada eliminada.
 
 Registra en Jira el AVD, nivel de API, versión de Expo Go, resultado del diagnóstico y resultado de
 cada paso manual.
+
+## Evidencia DD-9
+
+El 13 de septiembre de 2026, el diagnóstico se ejecutó en el AVD `Dansk_API_36`, Android 16/API 36
+y Expo Go 57.0.9. Las cinco comprobaciones finalizaron con `PASS`; el borrado completo eliminó las
+tres categorías y los respaldos heredados, y el resultado se mantuvo al reabrir la base temporal.

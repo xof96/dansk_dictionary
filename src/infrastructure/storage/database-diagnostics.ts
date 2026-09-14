@@ -3,6 +3,7 @@ import { deleteDatabaseAsync, openDatabaseAsync, SQLiteDatabase } from 'expo-sql
 import { DictionaryEntry } from '@/domain/models/dictionary';
 import {
   addFavorite,
+  clearAllLocalData,
   DATABASE_VERSION,
   getStoredEntry,
   isFavorite,
@@ -312,6 +313,61 @@ async function preserveIncompatibleTable(databaseName: string): Promise<string> 
   }
 }
 
+async function clearEveryLocalRecord(databaseName: string): Promise<string> {
+  const entry = diagnosticEntry('hedde', 'lemma', '2026-08-03T00:00:00.000Z');
+
+  try {
+    await withDatabase(databaseName, async (database) => {
+      await migrateDatabase(database);
+      await saveEntry(database, entry);
+      await recordHistory(database, entry);
+      await addFavorite(database, entry);
+      await database.execAsync(`
+        CREATE TABLE entry_cache_legacy_v1 (marker TEXT);
+        CREATE TABLE history_legacy_v1 (marker TEXT);
+        CREATE TABLE favorites_legacy_v1 (marker TEXT);
+        INSERT INTO entry_cache_legacy_v1 VALUES ('cache');
+        INSERT INTO history_legacy_v1 VALUES ('history');
+        INSERT INTO favorites_legacy_v1 VALUES ('favorites');
+      `);
+
+      await clearAllLocalData(database);
+    });
+
+    await withDatabase(databaseName, async (database) => {
+      await migrateDatabase(database);
+      const counts = await database.getFirstAsync<{
+        cache_count: number;
+        favorites_count: number;
+        history_count: number;
+      }>(`
+        SELECT
+          (SELECT COUNT(*) FROM entry_cache) AS cache_count,
+          (SELECT COUNT(*) FROM history) AS history_count,
+          (SELECT COUNT(*) FROM favorites) AS favorites_count
+      `);
+      const legacyTables = await database.getAllAsync<{ name: string }>(`
+        SELECT name FROM sqlite_master
+        WHERE type = 'table'
+          AND name IN (
+            'entry_cache_legacy_v1',
+            'history_legacy_v1',
+            'favorites_legacy_v1'
+          )
+      `);
+
+      assertDiagnostic(counts?.cache_count === 0, 'La caché no quedó vacía');
+      assertDiagnostic(counts?.history_count === 0, 'El historial no quedó vacío');
+      assertDiagnostic(counts?.favorites_count === 0, 'Los favoritos no quedaron vacíos');
+      assertDiagnostic(legacyTables.length === 0, 'Persistieron respaldos con datos antiguos');
+    });
+
+    return 'El borrado completo sobrevivió al reinicio y eliminó también los respaldos heredados.';
+  } finally {
+    await removeDatabase(databaseName);
+  }
+}
+
 export async function runStorageDiagnostics(): Promise<StorageDiagnosticReport> {
   const runId = `${Date.now()}-${Math.round(Math.random() * 1_000_000)}`;
   const checks = await Promise.all([
@@ -326,6 +382,9 @@ export async function runStorageDiagnostics(): Promise<StorageDiagnosticReport> 
     ),
     captureCheck('Respaldo de tabla incompatible', () =>
       preserveIncompatibleTable(`dd6-incompatible-${runId}.db`),
+    ),
+    captureCheck('Borrado completo de datos locales', () =>
+      clearEveryLocalRecord(`dd9-clear-all-${runId}.db`),
     ),
   ]);
 

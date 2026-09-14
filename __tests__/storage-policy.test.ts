@@ -5,6 +5,10 @@ import { DictionaryError } from '@/domain/models/errors';
 import { normalizeWiktionaryPage } from '@/infrastructure/providers/wiktionary/wiktionary-normalizer';
 import {
   addFavorite,
+  clearAllLocalData,
+  clearEntryCache,
+  clearFavorites,
+  clearHistory,
   DATABASE_VERSION,
   getStoredEntry,
   migrateDatabase,
@@ -72,6 +76,7 @@ describe('migraciones SQLite', () => {
 
     expect(execAsync).toHaveBeenCalledTimes(1);
     expect(execAsync.mock.calls[0]?.[0]).toContain('PRAGMA foreign_keys = ON');
+    expect(execAsync.mock.calls[0]?.[0]).toContain('PRAGMA secure_delete = ON');
     expect(withTransactionAsync).not.toHaveBeenCalled();
   });
 
@@ -237,6 +242,38 @@ describe('persistencia exacta y caché', () => {
 
     expect(runAsync).toHaveBeenNthCalledWith(1, 'DELETE FROM history WHERE query = ?', query);
     expect(runAsync).toHaveBeenNthCalledWith(2, 'DELETE FROM favorites WHERE query = ?', query);
+  });
+
+  it('borra por separado historial, favoritos y caché', async () => {
+    const runAsync = jest.fn().mockResolvedValue({});
+    const database = { runAsync } as unknown as SQLiteDatabase;
+
+    await clearHistory(database);
+    await clearFavorites(database);
+    await clearEntryCache(database);
+
+    expect(runAsync.mock.calls).toEqual([
+      ['DELETE FROM history'],
+      ['DELETE FROM favorites'],
+      ['DELETE FROM entry_cache'],
+    ]);
+  });
+
+  it('borra todos los datos y respaldos heredados en una transacción', async () => {
+    const execAsync = jest.fn().mockResolvedValue(undefined);
+    const withTransactionAsync = jest.fn(async (task: () => Promise<void>) => task());
+    const database = { execAsync, withTransactionAsync } as unknown as SQLiteDatabase;
+
+    await clearAllLocalData(database);
+
+    expect(withTransactionAsync).toHaveBeenCalledTimes(1);
+    const sql = execAsync.mock.calls[0]?.[0] as string;
+    expect(sql).toContain('DELETE FROM entry_cache');
+    expect(sql).toContain('DELETE FROM history');
+    expect(sql).toContain('DELETE FROM favorites');
+    expect(sql).toContain('DROP TABLE IF EXISTS entry_cache_legacy_v1');
+    expect(sql).toContain('DROP TABLE IF EXISTS history_legacy_v1');
+    expect(sql).toContain('DROP TABLE IF EXISTS favorites_legacy_v1');
   });
 });
 

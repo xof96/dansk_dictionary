@@ -47,6 +47,7 @@ Cada carpeta de `src/features/` reúne hooks y componentes de un comportamiento 
 - `dictionary`: ejecuta la consulta remota/local y presenta el dominio;
 - `favorites`: mantiene el corazón y las listas guardadas;
 - `history`: actualiza listas al enfocar la pantalla y permite eliminar;
+- `privacy`: concentra enlaces legales y el borrado verificable de datos locales;
 - `information`: hoy es una ruta estática, sin estado propio.
 
 No se añadió Zustand porque Query ya cubre estado remoto y cada estado visual es local al componente. Añadir otra fuente global sería duplicar responsabilidades.
@@ -70,6 +71,10 @@ SQLite es la fuente persistente para tres conjuntos:
 - `entry_cache`: entrada normalizada, fechas, revisión, proveedor y versión de esquema;
 - `history`: clave exacta, forma visible, tipo y última consulta;
 - `favorites`: clave exacta, tipo, fecha y snapshot de la entrada.
+
+La pantalla **Información** permite borrar historial, favoritos y caché por separado o en una sola
+transacción. El borrado completo elimina también respaldos de migraciones anteriores; al borrar la
+caché se descartan además las consultas de diccionario mantenidas en memoria.
 
 TanStack Query no reemplaza SQLite: mantiene el estado remoto en memoria, deduplica consultas, cancela y limita reintentos. SQLite mantiene la copia durable. Al reiniciar la app, la siguiente consulta intenta renovar desde internet y usa SQLite si falla o si el dispositivo está offline. La caché no se escribe dos veces en formatos diferentes: guarda el mismo `DictionaryEntry` que consume la UI.
 
@@ -224,27 +229,29 @@ contenido anterior.
 
 ## Tabla de archivos esenciales
 
-| Ruta                                                               | Responsabilidad               | Utilizado por                 | Modificar cuando…                             |
-| ------------------------------------------------------------------ | ----------------------------- | ----------------------------- | --------------------------------------------- |
-| `app/_layout.tsx`                                                  | Providers y Stack raíz        | toda la app                   | cambie un provider global o una ruta de Stack |
-| `app/+native-intent.ts`                                            | valida deep links nativos     | Expo Router en Android        | cambie el esquema o la política de enlaces    |
-| `app/(tabs)/_layout.tsx`                                           | navegación primaria           | cuatro tabs                   | se añada/quite una sección principal          |
-| `app/(tabs)/index.tsx`                                             | búsqueda exacta y recientes   | usuario, historial            | cambie la experiencia de búsqueda             |
-| `app/entry/[term].tsx`                                             | estados de la consulta        | hook y detalle                | cambien carga/error/sugerencias               |
-| `src/domain/models/dictionary.ts`                                  | lenguaje ubicuo               | normalizadores, DB, UI, tests | se añada una capacidad lingüística            |
-| `src/domain/repositories/dictionary-repository.ts`                 | puerto de consulta            | proveedor                     | cambie el contrato independiente de proveedor |
-| `src/domain/services/dictionary-policy.ts`                         | normalización/prioridad       | búsqueda y agregación         | cambie deduplicación o conflictos             |
-| `src/features/dictionary/hooks/use-dictionary-entry.ts`            | adapta TanStack Query         | ruta de entrada               | cambie la integración React/Query             |
-| `src/features/dictionary/services/load-dictionary-entry.ts`        | decide entre red y caché      | hook y tests                  | cambie la política online/offline             |
-| `src/features/dictionary/components/entry-detail.tsx`              | presenta el dominio           | ruta de entrada               | cambie jerarquía visual o accesibilidad       |
-| `src/infrastructure/api/http-client.ts`                            | HTTP seguro validado          | proveedores                   | cambien timeout, headers o errores            |
-| `src/infrastructure/providers/wiktionary/wiktionary-schema.ts`     | valida DTO externo            | repositorio Wiktionary        | cambie la API de MediaWiki                    |
-| `src/infrastructure/providers/wiktionary/wiktionary-normalizer.ts` | wikitext → dominio            | repositorio y tests           | se soporte una plantilla/campo nuevo          |
-| `src/infrastructure/providers/wiktionary/editorial-content.ts`     | traducciones/ejemplos propios | normalizador                  | se revise contenido pedagógico                |
-| `src/infrastructure/providers/wiktionary/wiktionary-repository.ts` | integración API y sugerencias | hook de consulta              | cambie endpoint/proveedor                     |
-| `src/infrastructure/storage/database.ts`                           | esquema, migración y CRUD     | hooks y providers             | cambie persistencia o versión de esquema      |
-| `src/infrastructure/storage/database-diagnostics.ts`               | prueba SQLite nativo aislado  | diagnóstico opt-in            | cambie el esquema o su protocolo Android      |
-| `src/providers/app-providers.tsx`                                  | Query, SQLite, red y foco     | layout raíz                   | cambie configuración global                   |
-| `__tests__/fixtures/wiktionary-pages.ts`                           | respuestas reales recortadas  | tests de proveedor            | se añada un patrón real nuevo                 |
-| `docs/data-sources.md`                                             | disponibilidad/licencia       | mantenimiento legal           | se integre o descarte una fuente              |
-| `docs/android-accessibility-validation.md`                         | protocolo accesible Android   | QA manual de pantallas        | cambie navegación, estados o componentes      |
+| Ruta                                                               | Responsabilidad               | Utilizado por                 | Modificar cuando…                              |
+| ------------------------------------------------------------------ | ----------------------------- | ----------------------------- | ---------------------------------------------- |
+| `app/_layout.tsx`                                                  | Providers y Stack raíz        | toda la app                   | cambie un provider global o una ruta de Stack  |
+| `app/+native-intent.ts`                                            | valida deep links nativos     | Expo Router en Android        | cambie el esquema o la política de enlaces     |
+| `app/(tabs)/_layout.tsx`                                           | navegación primaria           | cuatro tabs                   | se añada/quite una sección principal           |
+| `app/(tabs)/index.tsx`                                             | búsqueda exacta y recientes   | usuario, historial            | cambie la experiencia de búsqueda              |
+| `app/entry/[term].tsx`                                             | estados de la consulta        | hook y detalle                | cambien carga/error/sugerencias                |
+| `src/domain/models/dictionary.ts`                                  | lenguaje ubicuo               | normalizadores, DB, UI, tests | se añada una capacidad lingüística             |
+| `src/domain/repositories/dictionary-repository.ts`                 | puerto de consulta            | proveedor                     | cambie el contrato independiente de proveedor  |
+| `src/domain/services/dictionary-policy.ts`                         | normalización/prioridad       | búsqueda y agregación         | cambie deduplicación o conflictos              |
+| `src/features/dictionary/hooks/use-dictionary-entry.ts`            | adapta TanStack Query         | ruta de entrada               | cambie la integración React/Query              |
+| `src/features/dictionary/services/load-dictionary-entry.ts`        | decide entre red y caché      | hook y tests                  | cambie la política online/offline              |
+| `src/features/dictionary/components/entry-detail.tsx`              | presenta el dominio           | ruta de entrada               | cambie jerarquía visual o accesibilidad        |
+| `src/infrastructure/api/http-client.ts`                            | HTTP seguro validado          | proveedores                   | cambien timeout, headers o errores             |
+| `src/infrastructure/providers/wiktionary/wiktionary-schema.ts`     | valida DTO externo            | repositorio Wiktionary        | cambie la API de MediaWiki                     |
+| `src/infrastructure/providers/wiktionary/wiktionary-normalizer.ts` | wikitext → dominio            | repositorio y tests           | se soporte una plantilla/campo nuevo           |
+| `src/infrastructure/providers/wiktionary/editorial-content.ts`     | traducciones/ejemplos propios | normalizador                  | se revise contenido pedagógico                 |
+| `src/infrastructure/providers/wiktionary/wiktionary-repository.ts` | integración API y sugerencias | hook de consulta              | cambie endpoint/proveedor                      |
+| `src/infrastructure/storage/database.ts`                           | esquema, migración y CRUD     | hooks y providers             | cambie persistencia o versión de esquema       |
+| `src/infrastructure/storage/database-diagnostics.ts`               | prueba SQLite nativo aislado  | diagnóstico opt-in            | cambie el esquema o su protocolo Android       |
+| `src/providers/app-providers.tsx`                                  | Query, SQLite, red y foco     | layout raíz                   | cambie configuración global                    |
+| `__tests__/fixtures/wiktionary-pages.ts`                           | respuestas reales recortadas  | tests de proveedor            | se añada un patrón real nuevo                  |
+| `docs/data-sources.md`                                             | disponibilidad/licencia       | mantenimiento legal           | se integre o descarte una fuente               |
+| `docs/privacy-policy.md`                                           | flujo y borrado de datos      | publicación de beta           | cambien proveedores, permisos o almacenamiento |
+| `docs/third-party-inventory.md`                                    | dependencias y medios         | revisión legal de la entrega  | cambien lockfile, assets o artefacto final     |
+| `docs/android-accessibility-validation.md`                         | protocolo accesible Android   | QA manual de pantallas        | cambie navegación, estados o componentes       |

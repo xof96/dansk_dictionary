@@ -20,6 +20,14 @@ describe('normalizeWiktionaryPage', () => {
       transcription: '[ˈhuˀs]',
       transcriptionType: 'phonetic',
     });
+    expect(entry?.attributions[0]).toMatchObject({
+      provider: 'Wiktionary (en)',
+      sourceUrl: 'https://en.wiktionary.org/w/index.php?title=hus&oldid=91092711',
+      sourceVersion: '91092711',
+      licenseName: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      acquisitionMethod: 'api',
+    });
   });
 
   it('mantiene hedder como forma actual y enlaza a hedde sin copiar su IPA', () => {

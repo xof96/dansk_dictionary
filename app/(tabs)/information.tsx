@@ -1,8 +1,18 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { PropsWithChildren } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, Linking, StyleSheet, View } from 'react-native';
 
-import { AppText, Card, DenmarkFlag, GradientHeader, PageScroll, Pill } from '@/components/ui';
+import {
+  ActionButton,
+  AppText,
+  Card,
+  DenmarkFlag,
+  GradientHeader,
+  PageScroll,
+  Pill,
+} from '@/components/ui';
+import { legalLinks, privacyContactEmail } from '@/features/privacy/legal-links';
+import { LocalDataScope, useLocalDataControls } from '@/features/privacy/use-local-data-controls';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 function InformationCard({
@@ -43,6 +53,24 @@ function InformationCard({
 }
 
 export default function InformationScreen() {
+  const localData = useLocalDataControls();
+
+  const confirmClear = (
+    scope: LocalDataScope,
+    title: string,
+    description: string,
+    actionLabel: string,
+  ) => {
+    Alert.alert(title, description, [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: actionLabel,
+        style: 'destructive',
+        onPress: () => void localData.clear(scope),
+      },
+    ]);
+  };
+
   return (
     <PageScroll>
       <GradientHeader
@@ -54,20 +82,152 @@ export default function InformationScreen() {
       <InformationCard icon="library-outline" title="Fuentes y licencias">
         <AppText>
           Las entradas se consultan mediante la API oficial de Wiktionary en inglés y se validan
-          antes de mostrarse. El texto reutilizado se atribuye bajo CC BY-SA 4.0 con enlace y
-          revisión de origen.
+          antes de mostrarse. Cada entrada enlaza una revisión concreta, acredita a sus
+          contribuidores e indica la fecha, licencia y modificaciones realizadas.
         </AppText>
         <AppText>
-          Las traducciones al español y los ejemplos marcados como pedagógicos son contenido
-          editorial propio. Den Danske Ordbog se usa solo como referencia funcional: no se copia ni
-          se extrae su contenido.
+          El texto original de Wiktionary se ofrece bajo CC BY-SA 4.0 y GFDL. Esta aplicación usa CC
+          BY-SA 4.0 como vía para reutilizar ese texto; las aportaciones adaptadas deben conservar
+          atribución, aviso de cambios y compartir-igual.
+        </AppText>
+        <View style={styles.actionList}>
+          <ActionButton
+            label="Derechos de Wiktionary"
+            kind="secondary"
+            onPress={() => void Linking.openURL(legalLinks.wiktionaryCopyright)}
+          />
+          <ActionButton
+            label="Términos de uso de Wikimedia"
+            kind="secondary"
+            onPress={() => void Linking.openURL(legalLinks.wikimediaTerms)}
+          />
+          <ActionButton
+            label="Licencia CC BY-SA 4.0"
+            kind="secondary"
+            onPress={() => void Linking.openURL(legalLinks.ccBySa)}
+          />
+          <ActionButton
+            label="Licencia GFDL"
+            kind="secondary"
+            onPress={() => void Linking.openURL(legalLinks.gfdl)}
+          />
+        </View>
+        <AppText variant="caption">
+          Dansk Dictionary no está desarrollado, patrocinado ni respaldado por Wikimedia. Las
+          traducciones y ejemplos pedagógicos son contenido editorial propio y mantienen una
+          atribución separada.
+        </AppText>
+        <AppText variant="caption">
+          Durante la beta, el código y el contenido editorial propio no tienen una licencia pública
+          y mantienen todos los derechos reservados. Den Danske Ordbog es solo una referencia
+          funcional: no se copia ni se extrae su contenido, audio o diseño.
         </AppText>
       </InformationCard>
       <InformationCard icon="shield-checkmark-outline" title="Privacidad y conexión" tone="pink">
         <AppText>
-          No hay cuentas, anuncios ni analítica. La palabra buscada se envía a Wiktionary.
-          Historial, favoritos y caché se guardan únicamente en SQLite dentro del dispositivo.
+          No hay cuentas, anuncios, analítica, rastreadores ni un servidor propio. Cuando buscas, la
+          palabra se envía a la API de Wikimedia para recuperar Wiktionary. Como en cualquier
+          conexión web, Wikimedia recibe datos técnicos como la dirección IP, el agente de usuario,
+          el sistema operativo y la fecha de la solicitud conforme a su propia política.
         </AppText>
+        <AppText>
+          Historial, favoritos y caché se guardan en SQLite únicamente en este dispositivo hasta que
+          los borres desde esta pantalla o desinstales la aplicación. Dansk Dictionary no los envía
+          a terceros ni los sincroniza.
+        </AppText>
+        <ActionButton
+          label="Política de privacidad de Wikimedia"
+          kind="secondary"
+          onPress={() => void Linking.openURL(legalLinks.wikimediaPrivacy)}
+        />
+        <ActionButton
+          label="Política de privacidad de Dansk Dictionary"
+          kind="secondary"
+          onPress={() => void Linking.openURL(legalLinks.danskDictionaryPrivacy)}
+        />
+        <ActionButton
+          label="Contactar sobre privacidad"
+          kind="secondary"
+          onPress={() => void Linking.openURL(`mailto:${privacyContactEmail}`)}
+        />
+        <AppText variant="caption">
+          Contacto de privacidad: {privacyContactEmail}. La política se publicará mediante GitHub
+          Pages antes de enviar la aplicación a Google Play.
+        </AppText>
+      </InformationCard>
+      <InformationCard icon="trash-outline" title="Control de datos locales" tone="yellow">
+        <AppText>
+          Puedes borrar cada categoría por separado o eliminar todos los datos locales. La acción no
+          se puede deshacer y siempre requiere confirmación.
+        </AppText>
+        <View style={styles.actionList}>
+          <ActionButton
+            label="Borrar historial"
+            kind="danger"
+            disabled={Boolean(localData.activeScope)}
+            accessibilityState={{ busy: localData.activeScope === 'history' }}
+            onPress={() =>
+              confirmClear(
+                'history',
+                '¿Borrar todo el historial?',
+                'Se eliminarán todas las palabras consultadas.',
+                'Borrar historial',
+              )
+            }
+          />
+          <ActionButton
+            label="Borrar favoritos"
+            kind="danger"
+            disabled={Boolean(localData.activeScope)}
+            accessibilityState={{ busy: localData.activeScope === 'favorites' }}
+            onPress={() =>
+              confirmClear(
+                'favorites',
+                '¿Borrar todos los favoritos?',
+                'Se eliminarán todas las palabras guardadas como favoritas.',
+                'Borrar favoritos',
+              )
+            }
+          />
+          <ActionButton
+            label="Borrar caché"
+            kind="danger"
+            disabled={Boolean(localData.activeScope)}
+            accessibilityState={{ busy: localData.activeScope === 'cache' }}
+            onPress={() =>
+              confirmClear(
+                'cache',
+                '¿Borrar toda la caché?',
+                'Las entradas dejarán de estar disponibles sin conexión hasta que vuelvas a consultarlas.',
+                'Borrar caché',
+              )
+            }
+          />
+          <ActionButton
+            label="Borrar todos los datos locales"
+            kind="danger"
+            disabled={Boolean(localData.activeScope)}
+            accessibilityState={{ busy: localData.activeScope === 'all' }}
+            onPress={() =>
+              confirmClear(
+                'all',
+                '¿Borrar todos los datos locales?',
+                'Se eliminarán el historial, los favoritos y todas las entradas guardadas en caché.',
+                'Borrar todo',
+              )
+            }
+          />
+        </View>
+        {localData.message ? (
+          <AppText accessibilityRole="alert" accessibilityLiveRegion="polite">
+            {localData.message}
+          </AppText>
+        ) : null}
+        {localData.error ? (
+          <AppText accessibilityRole="alert" accessibilityLiveRegion="assertive">
+            {localData.error} Puedes volver a intentarlo con el mismo botón.
+          </AppText>
+        ) : null}
       </InformationCard>
       <InformationCard icon="text-outline" title="Género: en / et" tone="yellow">
         <View style={styles.pillRow}>
@@ -112,4 +272,5 @@ const styles = StyleSheet.create({
   },
   headingText: { flex: 1 },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  actionList: { gap: 10 },
 });

@@ -352,7 +352,7 @@ export function normalizeWiktionaryPage(
     {
       id: wiktionaryAttributionId,
       provider: 'Wiktionary (en)',
-      sourceUrl: `https://en.wiktionary.org/wiki/${encodeURIComponent(page.title)}`,
+      sourceUrl: `https://en.wiktionary.org/w/index.php?title=${encodeURIComponent(page.title)}&oldid=${page.revid}`,
       licenseName: 'CC BY-SA 4.0',
       licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
       attributionText: `Contribuidores de Wiktionary, revisión ${page.revid}`,
