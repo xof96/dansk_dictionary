@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
@@ -9,6 +9,7 @@ import { DataAttribution, DictionaryEntry, GrammaticalFeatures } from '@/domain/
 import { buildEntryHref } from '@/domain/services/dictionary-navigation';
 import { TtsButton } from '@/features/dictionary/components/tts-button';
 import { useFavorite } from '@/features/favorites/use-favorite';
+import { wiktionaryModificationNotice } from '@/features/privacy/legal-links';
 import { useAppTheme } from '@/hooks/use-app-theme';
 
 function sourceNames(ids: string[], sources: DataAttribution[]): string {
@@ -17,6 +18,17 @@ function sourceNames(ids: string[], sources: DataAttribution[]): string {
       ids.map((id) => sources.find((source) => source.id === id)?.provider).filter(Boolean),
     ),
   ].join(' · ');
+}
+
+function exactSourceUrl(attribution: DataAttribution): string {
+  if (
+    attribution.acquisitionMethod === 'api' &&
+    attribution.sourceVersion &&
+    attribution.sourceUrl.startsWith('https://en.wiktionary.org/')
+  ) {
+    return `https://en.wiktionary.org/w/index.php?oldid=${encodeURIComponent(attribution.sourceVersion)}`;
+  }
+  return attribution.sourceUrl;
 }
 
 function SourceLine({ ids, entry }: { ids: string[]; entry: DictionaryEntry }) {
@@ -270,24 +282,48 @@ export function EntryDetail({ entry }: { entry: DictionaryEntry }) {
 
       <Card>
         <AppText variant="heading">Fuentes y atribución</AppText>
-        {entry.attributions.map((attribution) => (
-          <View key={attribution.id} style={styles.itemGroup}>
-            <AppText style={{ fontFamily: typography.semibold }}>{attribution.provider}</AppText>
-            <AppText variant="caption">{attribution.attributionText}</AppText>
-            <AppText variant="caption">
-              {attribution.licenseName} · consultado{' '}
-              {new Date(attribution.retrievedAt).toLocaleDateString('es-ES')}
-            </AppText>
-            {attribution.sourceUrl.startsWith('https://') ? (
-              <ActionButton
-                label="Abrir fuente"
-                kind="secondary"
-                accessibilityHint="Abre la página de origen en el navegador"
-                onPress={() => void Linking.openURL(attribution.sourceUrl)}
-              />
-            ) : null}
-          </View>
-        ))}
+        {entry.attributions.map((attribution) => {
+          const sourceUrl = exactSourceUrl(attribution);
+          return (
+            <View key={attribution.id} style={styles.itemGroup}>
+              <AppText style={{ fontFamily: typography.semibold }}>{attribution.provider}</AppText>
+              <AppText variant="caption">{attribution.attributionText}</AppText>
+              <AppText variant="caption">
+                Licencia: {attribution.licenseName} · consultado{' '}
+                {new Date(attribution.retrievedAt).toLocaleDateString('es-ES')}
+              </AppText>
+              {attribution.sourceVersion ? (
+                <AppText variant="caption">Revisión: {attribution.sourceVersion}</AppText>
+              ) : null}
+              <AppText variant="caption" selectable>
+                URL: {sourceUrl}
+              </AppText>
+              <AppText variant="caption">
+                {attribution.acquisitionMethod === 'api'
+                  ? wiktionaryModificationNotice
+                  : 'Contenido editorial propio preparado para Dansk Dictionary; no procede de Wiktionary.'}
+              </AppText>
+              <View style={styles.attributionActions}>
+                {sourceUrl.startsWith('https://') ? (
+                  <ActionButton
+                    label={`Abrir revisión de ${attribution.provider}`}
+                    kind="secondary"
+                    accessibilityHint="Abre la revisión exacta de la página de origen en el navegador"
+                    onPress={() => void Linking.openURL(sourceUrl)}
+                  />
+                ) : null}
+                {attribution.licenseUrl.startsWith('https://') ? (
+                  <ActionButton
+                    label={`Abrir licencia de ${attribution.provider}`}
+                    kind="secondary"
+                    accessibilityHint="Abre el texto de la licencia en el navegador"
+                    onPress={() => void Linking.openURL(attribution.licenseUrl)}
+                  />
+                ) : null}
+              </View>
+            </View>
+          );
+        })}
       </Card>
     </View>
   );
@@ -330,4 +366,5 @@ const styles = StyleSheet.create({
   pressed: { opacity: 0.65 },
   example: { fontFamily: typography.semibold, fontSize: 21, lineHeight: 29 },
   audioRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  attributionActions: { gap: 10 },
 });

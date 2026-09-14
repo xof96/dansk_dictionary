@@ -10,7 +10,8 @@ Estado: integrado como proveedor léxico principal.
 - Autenticación: no requiere clave.
 - Disponibilidad: comprobada el 2 de agosto de 2026 con `hus`, `dag`, `lytter`, `arbejde`, `forstå`, `hedde`, `hedder`, `huset` y `husene`.
 - CORS: se usa `origin=*`, mecanismo admitido por MediaWiki Action API.
-- Licencia del texto: CC BY-SA 4.0/GFDL según los términos de Wikimedia y la página; el producto atribuye URL y revisión. El uso comercial es posible cumpliendo atribución y compartir-igual.
+- Licencia del texto original: CC BY-SA 4.0 y GFDL. El producto reutiliza mediante CC BY-SA 4.0,
+  enlaza la revisión exacta con `oldid` y muestra crédito, licencia, fecha y aviso de normalización.
 - Almacenamiento: se conserva el dominio normalizado con atribución. La caché expira a efectos de frescura en siete días; no se elimina la atribución.
 - Límites: no se asume un cupo contractual. El cliente incluye identificador, timeout, cancelación y un solo reintento; HTTP 429 se trata como rate limit.
 - Riesgos: wikitext comunitario y plantillas cambiantes. Por eso el DTO se valida, el parser admite un subconjunto explícito y los datos desconocidos quedan ausentes.

@@ -5,11 +5,11 @@ import { AppTabBar } from '@/components/app-tab-bar';
 
 type AppTabBarProps = ComponentProps<typeof AppTabBar>;
 
-jest.mock('@expo/vector-icons', () => {
+jest.mock('@expo/vector-icons/Ionicons', () => {
   const React = jest.requireActual<typeof import('react')>('react');
   const { Text } = jest.requireActual<typeof import('react-native')>('react-native');
-  return {
-    Ionicons: ({ name }: { name: string }) => React.createElement(Text, null, name),
+  return function MockIonicons({ name }: { name: string }) {
+    return React.createElement(Text, null, name);
   };
 });
 
